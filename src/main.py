@@ -59,7 +59,11 @@ tw.write_tab("InitStates")
 tw.untab_write("end InitStates\n")
 
 tw.write_tab("Groups")
+for g in gdp["groups"]:
+    tw.write(g)
 tw.untab_write("end Groups\n")
 
 tw.write_tab("Formulae")
+for f in gdp["formulae"]:
+    tw.write(f)
 tw.untab_write("end Formulae\n")

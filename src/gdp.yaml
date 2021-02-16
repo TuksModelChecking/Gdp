@@ -25,3 +25,14 @@ A3:
   demand: 1
   access:
     - r3
+
+groups:
+  - A1 = {A1};
+  - A1A2 = {A1,A2};
+  - A1A2A3 = {A1,A2,A3};
+
+formulae:
+  - <A1A2>G ((<A1A2>F eat1) and (<A1A2>F eat2));
+  - <A1A2>G ((<A1A2>F eat1) and (<A1A2>F eat2));
+  - <A1A2A3>G ((<A1A2A3>F eat1) and (<A1A2A3>F eat2) and (<A1A2A3>F eat3));
+  - <A1>G (<A1>F eat1);
