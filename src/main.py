@@ -35,6 +35,7 @@ tw.write_tab("Vars:")
 for v in gdp["resources"]:
     tw.write(f"{v}: 0..{num_agents};")
 tw.untab_write("end Vars")
+tw.write("Actions = {none};\n\tProtocol:\n\t\tOther: {none};\n\tend Protocol")
 tw.untab_write("end Agent\n")
 
 for a in gdp["agents"]:

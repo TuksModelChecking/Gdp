@@ -6,6 +6,10 @@ Agent Environment
 		r2: 0..3;
 		r3: 0..3;
 	end Vars
+	Actions = {none};
+	Protocol:
+		Other: {none};
+	end Protocol
 end Agent
 
 Agent A1
