@@ -1,27 +1,27 @@
 agents:
-  - a1
-  - a2
-  - a3
+  - A1
+  - A2
+  - A3
 
 resources:
   - r1
   - r2
   - r3
 
-a1:
+A1:
   demand: 2
   access:
     - r1
     - r2
 
-a2: 
+A2: 
   demand: 2
   access:
     - r1
     - r2
     - r3
  
-a3: 
+A3: 
   demand: 1
   access:
     - r3
