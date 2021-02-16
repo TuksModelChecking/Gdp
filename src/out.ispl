@@ -17,6 +17,7 @@ Agent A1
 	Vars:
 		rem: 0..2;
 	end Vars
+	Actions = {req1,rel1,req2,rel2,relall, idle};
 end Agent
 
 Agent A2
@@ -24,6 +25,7 @@ Agent A2
 	Vars:
 		rem: 0..2;
 	end Vars
+	Actions = {req1,rel1,req2,rel2,req3,rel3,relall, idle};
 end Agent
 
 Agent A3
@@ -31,6 +33,7 @@ Agent A3
 	Vars:
 		rem: 0..1;
 	end Vars
+	Actions = {req3,rel3,relall, idle};
 end Agent
 
 Evaluation

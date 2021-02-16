@@ -33,6 +33,7 @@ tw.write("Semantics=SingleAssignment;\n")
 tw.write_tab("Agent Environment")
 tw.write_tab("Vars:")
 for v in gdp["resources"]:
+    #Perhaps optimize here to only allow resources to be held by Agents that actually have access to them?
     tw.write(f"{v}: 0..{num_agents};")
 tw.untab_write("end Vars")
 tw.write("Actions = {none};\n\tProtocol:\n\t\tOther: {none};\n\tend Protocol")
@@ -40,16 +41,25 @@ tw.untab_write("end Agent\n")
 
 for a in gdp["agents"]:
     tw.write_tab(f"Agent {a}")
+    actions = "{"
     lobsvars = "{"
-    for v in gdp[a]["access"]:
-        lobsvars += v
+    for r in gdp[a]["access"]:
+        actions += f"req{r[1:]},"
+        actions += f"rel{r[1:]},"
+        lobsvars += r
         lobsvars += ","
-    lobsvars = lobsvars[:-1] + "};"
+    if len(lobsvars) == 1:
+        lobsvars = "{none};"
+        actions = "{idle};"
+    else:
+        actions = actions[:-1] + ",relall,idle};"
+        lobsvars = lobsvars[:-1] + "};"
     tw.write(f"Lobsvars = {lobsvars}")
     tw.write_tab("Vars:")
     demand = gdp[a]["demand"]
     tw.write(f"rem: 0..{demand};")
     tw.untab_write("end Vars")
+    tw.write(f"Actions = {actions}")
     tw.untab_write(f"end Agent\n")
 
 tw.write_tab("Evaluation")
