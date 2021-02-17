@@ -1,6 +1,6 @@
 import yaml
 
-class TabbedWriter:
+class TabTrackingWriter:
     def __init__(self, file):
         self.file = file
         self.tab_depth = 0
@@ -25,7 +25,7 @@ with open("gdp.yaml", "r") as gdp_yaml:
     gdp = yaml.load(open("gdp.yaml", "r"))
 
 file = open("out.ispl", "w")
-tw = TabbedWriter(file)
+tw = TabTrackingWriter(file)
 num_agents = len(gdp["agents"])
 
 tw.write("Semantics=SingleAssignment;\n")
@@ -37,6 +37,10 @@ for v in gdp["resources"]:
     tw.write(f"{v}: 0..{num_agents};")
 tw.untab_write("end Vars")
 tw.write("Actions = {none};\n\tProtocol:\n\t\tOther: {none};\n\tend Protocol")
+tw.write_tab("Evolution")
+for r in gdp["resources"]:
+
+tw.untab_write("end Evolution")
 tw.untab_write("end Agent\n")
 
 for a in gdp["agents"]:
