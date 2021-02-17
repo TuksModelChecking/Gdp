@@ -97,9 +97,8 @@ for a in gdp["agents"]:
     tw.untab_write("end Protocol")
     tw.write_tab("Evolution:")
     for my_r in gdp[a]["access"]:
-        tw.write(
-            f"rem = rem-1 if (Action = req{my_r[1:]} and Environment.{my_r} = 0 and {othersNotRequesting(my_r, a, gdp)});"
-        )
+        onr = othersNotRequesting(my_r, a, gdp)
+        tw.write(f"rem = rem-1 if (Action = req{my_r[1:]} and Environment.{my_r} = 0 and {onr});")
         tw.write(f"rem = rem+1 if (Action = rel{my_r[1:]});")
         tw.write(f"rem = {gdp[a]['demand']} if (Action = relall);")
     tw.untab_write("end Evolution")
