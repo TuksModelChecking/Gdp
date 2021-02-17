@@ -27,8 +27,8 @@ A3:
     - r3
 
 groups:
-  - A1 = {A1};
-  - A1A2 = {A1,A2};
+  - A1 = {A1}; ## automatically add the curly part of eq A1..A10, group called ALL, exA1 == all excluding a1
+  - A1A2 = {A1,A2}; ## manual on how to use the tool, for the prof
   - A1A2A3 = {A1,A2,A3};
 
 formulae:

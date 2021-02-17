@@ -1,3 +1,4 @@
+import sys
 import yaml
 
 class TabTrackingWriter:
@@ -38,9 +39,23 @@ def othersNotRequesting(resource, agent, gdp):
             condition += f" and !({a}.Action = req{r_id})"
     return condition
 
+if len(sys.argv) < 2:
+    print("No GDP file specified.")
+    print("Please specify the file you want to use.\nExample: $ python3 gdp_to_ispl.py files/5phil\n")
+    raise IOError
+filename = sys.argv[1]
+if filename.endswith((".txt",".yaml")):
+    file = open(filename, "r")
+else:
+    try:
+        file = open(filename + ".yaml", "r" )
+    except IOError:
+        try: 
+            file = open(filename + ".txt", "r")
+        except IOError:
+            pass
 
-with open("gdp.yaml", "r") as gdp_yaml:
-    gdp = yaml.load(open("gdp.yaml", "r"))
+gdp = yaml.load(file)
 
 file = open("out.ispl", "w")
 tw = TabTrackingWriter(file)
@@ -50,9 +65,9 @@ tw.write("Semantics=SingleAssignment;\n")
 
 tw.write_tab("Agent Environment")
 tw.write_tab("Vars:")
-for v in gdp["resources"]:
+for r in gdp["resources"]:
     #Perhaps optimize here to only allow resources to be held by Agents that actually have access to them?
-    tw.write(f"{v}: 0..{num_agents};")
+    tw.write(f"{r}: 0..{num_agents};")
 tw.untab_write("end Vars")
 tw.write("Actions = {none};\n\tProtocol:\n\t\tOther: {none};\n\tend Protocol")
 tw.write_tab("Evolution:")
@@ -127,3 +142,4 @@ tw.write_tab("Formulae")
 for f in gdp["formulae"]:
     tw.write(f)
 tw.untab_write("end Formulae\n")
+
