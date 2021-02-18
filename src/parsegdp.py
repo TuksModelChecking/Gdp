@@ -1,5 +1,5 @@
-import sys
-import yaml
+from sys import argv
+from yaml import load
 
 class TabTrackingWriter:
     def __init__(self, file):
@@ -21,7 +21,7 @@ class TabTrackingWriter:
         self.tab_depth -= 1
         self.write(string)
 
-def takeCondition(resource, agent, gdp):
+def take_condition(resource, agent, gdp):
     a_id = agent[1:]
     r_id = resource[1:]
     condition = f"{resource} = 0 and {agent}.Action = req{r_id}"
@@ -30,7 +30,7 @@ def takeCondition(resource, agent, gdp):
             condition += f" and !({a}.Action = req{r_id})"
     return condition
 
-def othersNotRequesting(resource, agent, gdp):
+def others_not_requesting(resource, agent, gdp):
     a_id = agent[1:]
     r_id = resource[1:]
     condition = f"Environment.{resource} = 0"
@@ -38,10 +38,6 @@ def othersNotRequesting(resource, agent, gdp):
         if a != agent and resource in gdp[a]["access"]:
             condition += f" and !({a}.Action = req{r_id})"
     return condition
-
-def generate_philosophers(num_p, demand_range):
-    gdp = []
-    return gdp
 
 def agents_in_group(num_agents, g):
     agents = g.split('A')[1:]
@@ -97,28 +93,45 @@ def groups_to_ispl(num_agents, groups):
             ispl_groups.append(specified_group(num_agents, g))
     return ispl_groups
 
-if len(sys.argv) > 2:
-    print(f"Generating a GDP model of {sys.argv[1]} Philosophers - each with random demand within {sys.argv[2]}...")
-    gdp = generate_philosophers(sys.argv[1], sys.argv[2])
-elif len(sys.argv) == 2:
-    filename = sys.argv[1]
-    print(f"Reading model from file '{filename}'...")
-    if filename.endswith((".txt",".yaml")):
-        file = open(filename, "r")
-    else:
-        try:
-            file = open(filename + ".yaml", "r" )
-        except IOError:
-            try: 
-                file = open(filename + ".txt", "r")
-            except IOError:
-                pass
-    gdp = yaml.load(file)
-else:
-    print("Generating a completely random GDP model...")
-    gdp = generate_philosophers()
+# ============================================================================
 
-print("Parsing to ISPL...")
+
+if len(argv) < 2:
+    print("No GDP file specified")
+    print("You can specify a file when running the script, like this:")
+    print("\t$ python3 parsegdp.py 5phil.yaml")
+    print("\tor more generally:")
+    print("\t$ python3 parsegdp.py <relative_file_path>/<filename>.<yaml/txt>")
+    print("\tyou may omit the file extension; making your command of the form:")
+    print("\t$ python3 parsegdp.py <relative_file_path>/<filename>")
+    filename = input("\nSpecify a file now: ")
+else:
+    filename = argv[1]
+if filename.endswith((".txt",".yaml")):
+    try:
+        file = open(filename, "r")
+        print(f"Opening file '{filename}'...")
+    except IOError:
+        print(f"Tried and failed to open '{filename}'")
+        print("Are you sure the filename and relative path is correct?")
+        exit()
+else:
+    print(f"Guessing file extension...")
+    try:
+        file = open(filename + ".yaml", "r" )
+        print(f"Opening file '{filename}.yaml'...")
+    except IOError:
+        print(f"Tried and failed to open '{filename}.yaml'")
+        try: 
+            file = open(filename + ".txt", "r")
+            print(f"Opening file '{filename}.txt'...")
+        except IOError:
+            print(f"Tried and failed to open '{filename}.txt'")
+            print("Are you sure the filename and relative path is correct?")
+            exit()
+gdp = load(file)
+
+print("Parsing model to ISPL...")
 
 file = open("out.ispl", "w")
 tw = TabTrackingWriter(file)
@@ -137,7 +150,7 @@ tw.write_tab("Evolution:")
 for r in gdp["resources"]:
     for a in gdp["agents"]:
         if r in gdp[a]["access"]:
-            tw.write(f"{r} = {a[1:]} if ({takeCondition(r, a, gdp)});")
+            tw.write(f"{r} = {a[1:]} if ({take_condition(r, a, gdp)});")
             tw.write(f"{r} = 0 if ({r} = {a[1:]} and {a}.Action = rel{r[1:]});")
             tw.write(f"{r} = 0 if ({r} = {a[1:]} and {a}.Action = relall);")
 tw.untab_write("end Evolution")
@@ -175,7 +188,7 @@ for a in gdp["agents"]:
     tw.untab_write("end Protocol")
     tw.write_tab("Evolution:")
     for my_r in gdp[a]["access"]:
-        onr = othersNotRequesting(my_r, a, gdp)
+        onr = others_not_requesting(my_r, a, gdp)
         tw.write(f"rem = rem-1 if (Action = req{my_r[1:]} and Environment.{my_r} = 0 and {onr});")
         tw.write(f"rem = rem+1 if (Action = rel{my_r[1:]});")
         tw.write(f"rem = {gdp[a]['demand']} if (Action = relall);")
@@ -206,3 +219,5 @@ for f in gdp["formulae"]:
     tw.write(f)
 tw.untab_write("end Formulae\n")
 
+tw.__del__()
+print("done, 'out.ispl' created")
