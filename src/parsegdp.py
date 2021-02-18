@@ -39,23 +39,86 @@ def othersNotRequesting(resource, agent, gdp):
             condition += f" and !({a}.Action = req{r_id})"
     return condition
 
-if len(sys.argv) < 2:
-    print("No GDP file specified.")
-    print("Please specify the file you want to use.\nExample: $ python3 gdp_to_ispl.py files/5phil\n")
-    raise IOError
-filename = sys.argv[1]
-if filename.endswith((".txt",".yaml")):
-    file = open(filename, "r")
-else:
-    try:
-        file = open(filename + ".yaml", "r" )
-    except IOError:
-        try: 
-            file = open(filename + ".txt", "r")
-        except IOError:
-            pass
+def generate_philosophers(num_p, demand_range):
+    gdp = []
+    return gdp
 
-gdp = yaml.load(file)
+def agents_in_group(num_agents, g):
+    agents = g.split('A')[1:]
+    agents_explicit = []
+    last_agent = None
+    for agent in agents:
+        if agent.endswith(".."):
+            last_agent = agent[:-2]
+            continue
+        if last_agent != None:
+            for i in range(int(last_agent), int(agent)):
+                agents_explicit.append(i)
+            last_agent = None
+        if int(agent) > num_agents or int(agent) < 1:
+            print(f"\n\terror: agent A{agent} is not defined.\n")
+            raise IOError
+        agents_explicit.append(agent)
+    return agents_explicit
+
+def all_agents(num_agents):
+    agent_set = "{"
+    for agent in range(1, num_agents):
+        agent_set += f"A{agent},"
+    agent_set += f"A{num_agents}"
+    return "ALL = " + agent_set + "};"
+
+def all_except(num_agents, g):
+    to_exclude = agents_in_group(num_agents, g)
+    agent_set = "{"
+    for agent in range(1, num_agents):
+        if agent not in to_exclude:
+            agent_set += f"A{agent},"
+    return "ex" + g + " = " + agent_set[:-1] + "};"
+
+def specified_group(num_agents, g):
+    agents = agents_in_group(num_agents, g)
+    group_name = ""
+    agent_set = "{"
+    for a in agents:
+        group_name += f"A{a}"
+        agent_set += f"A{a},"
+    agent_set = agent_set[:-1] + "};"
+    return group_name + " = " + agent_set
+
+def groups_to_ispl(num_agents, groups):
+    ispl_groups = []
+    for g in groups:
+        if g == "ALL":
+            ispl_groups.append(all_agents(num_agents))
+        elif g.startswith("ex"):
+            ispl_groups.append(all_except(num_agents, g[2:]))
+        else:
+            ispl_groups.append(specified_group(num_agents, g))
+    return ispl_groups
+
+if len(sys.argv) > 2:
+    print(f"Generating a GDP model of {sys.argv[1]} Philosophers - each with random demand within {sys.argv[2]}...")
+    gdp = generate_philosophers(sys.argv[1], sys.argv[2])
+elif len(sys.argv) == 2:
+    filename = sys.argv[1]
+    print(f"Reading model from file '{filename}'...")
+    if filename.endswith((".txt",".yaml")):
+        file = open(filename, "r")
+    else:
+        try:
+            file = open(filename + ".yaml", "r" )
+        except IOError:
+            try: 
+                file = open(filename + ".txt", "r")
+            except IOError:
+                pass
+    gdp = yaml.load(file)
+else:
+    print("Generating a completely random GDP model...")
+    gdp = generate_philosophers()
+
+print("Parsing to ISPL...")
 
 file = open("out.ispl", "w")
 tw = TabTrackingWriter(file)
@@ -134,7 +197,7 @@ tw.write(f"{agents[len(agents)-1]}.rem = {gdp[agents[len(agents)-1]]['demand']};
 tw.untab_write("end InitStates\n")
 
 tw.write_tab("Groups")
-for g in gdp["groups"]:
+for g in groups_to_ispl(len(gdp["agents"]), gdp["groups"]):
     tw.write(g)
 tw.untab_write("end Groups\n")
 
