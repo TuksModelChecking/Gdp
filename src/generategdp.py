@@ -14,7 +14,6 @@ def generate_philosophers(num_p, num_r, demand_range):
         for i in range(0, randint(gdp[a]["demand"], max_demand)):
             start_point = randint(0, num_r)
             for c in range(0, num_r):
-                print((start_point + c) % num_r)
                 choice = gdp["resources"][(start_point + c) % num_r]
                 if choice not in gdp[a]["access"]:
                     gdp[a]["access"].append(choice)
