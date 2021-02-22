@@ -11,7 +11,7 @@ def generate_philosophers(num_p, num_r, demand_range):
         gdp[a] = {}
         gdp[a]["demand"] = randint(int(demand_range[0]), max_demand)
         gdp[a]["access"] = []
-        for i in range(0, randint(gdp[a]["demand"], max_demand)):
+        for i in range(0, randint(gdp[a]["demand"], num_r)):
             start_point = randint(0, num_r)
             for c in range(0, num_r):
                 choice = gdp["resources"][(start_point + c) % num_r]
@@ -21,21 +21,13 @@ def generate_philosophers(num_p, num_r, demand_range):
                 else: 
                     start_point += 1
         gdp[a]["access"].sort()
-    gdp["groups"] = [
-        u'A1A2',
-        u'ALL',
-        u'exA1A2'
-    ]
-    gdp["formulae"] = [
-        u'<ALL>G ((<ALL>F eat1) and (<ALL>F eat2) and (<ALL>F eat3));',
-        u'<A1A2>G ((<A1A2>F eat1) and (<exA1A2>F eat2));'
-    ]
+    gdp["formulae"] = []
     return gdp
 
 def random_generation():
-    minimum = randint(0, 50)
-    maximum = randint(minimum, 100)
-    return generate_philosophers(randint(1, 100), randint(1, maximum), (minimum, maximum))
+    minimum = randint(0, 5)
+    maximum = randint(minimum, 10)
+    return generate_philosophers(randint(1, 10), randint(1, maximum), (minimum, maximum))
 
 if len(argv) < 2:
     print("No arguments provided")
@@ -50,7 +42,6 @@ if len(argv) < 2:
     decision = input("Generate a bounded random GDP now? (Y/N) ")
     if "Y" in decision.capitalize():
         gdp = random_generation(
-            input("Number of Philosophers? (int) "),
             input("Number of Resources? (int)"),
             input("Demand range? (x..y) [with y ≤ num_resources]: ")
         )

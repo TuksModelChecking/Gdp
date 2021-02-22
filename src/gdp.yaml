@@ -26,15 +26,8 @@ A3:
   access:
     - r3
 
-groups:
-  - A1
-  - exA3
-  - ALL
-
 formulae:
-  - <exA3>G ((<exA3>F eat1) and (<exA3>F eat2));
-  - <exA3>G ((<exA3>F eat1) and (<exA3>F eat2));
-  - <ALL>G ((<ALL>F eat1) and (<ALL>F eat2) and (<ALL>F eat3));
-  - <A1>G (<A1>F eat1);
-
-## manual on how to use the tool, for the prof
+  - <A1_A3> achieve
+  - <exA3> live
+  - <A1A2> prevent
+  - <exA2> achieve

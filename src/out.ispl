@@ -2,290 +2,105 @@ Semantics=SingleAssignment;
 
 Agent Environment
 	Vars:
-		r1: 0..5;
-		r2: 0..5;
-		r3: 0..5;
-		r4: 0..5;
-		r5: 0..5;
-		r6: 0..5;
-		r7: 0..5;
-		r8: 0..5;
+		r1: 0..3;
+		r2: 0..3;
+		r3: 0..3;
 	end Vars
 	Actions = {none};
 	Protocol:
 		Other: {none};
 	end Protocol
 	Evolution:
-		r1 = 1 if (r1 = 0 and A1.Action = req1 and !(A2.Action = req1) and !(A3.Action = req1) and !(A4.Action = req1) and !(A5.Action = req1));
+		r1 = 1 if (r1 = 0 and A1.Action = req1 and !(A2.Action = req1));
 		r1 = 0 if (r1 = 1 and A1.Action = rel1);
 		r1 = 0 if (r1 = 1 and A1.Action = relall);
-		r1 = 2 if (r1 = 0 and A2.Action = req1 and !(A1.Action = req1) and !(A3.Action = req1) and !(A4.Action = req1) and !(A5.Action = req1));
+		r1 = 2 if (r1 = 0 and A2.Action = req1 and !(A1.Action = req1));
 		r1 = 0 if (r1 = 2 and A2.Action = rel1);
 		r1 = 0 if (r1 = 2 and A2.Action = relall);
-		r1 = 3 if (r1 = 0 and A3.Action = req1 and !(A1.Action = req1) and !(A2.Action = req1) and !(A4.Action = req1) and !(A5.Action = req1));
-		r1 = 0 if (r1 = 3 and A3.Action = rel1);
-		r1 = 0 if (r1 = 3 and A3.Action = relall);
-		r1 = 4 if (r1 = 0 and A4.Action = req1 and !(A1.Action = req1) and !(A2.Action = req1) and !(A3.Action = req1) and !(A5.Action = req1));
-		r1 = 0 if (r1 = 4 and A4.Action = rel1);
-		r1 = 0 if (r1 = 4 and A4.Action = relall);
-		r1 = 5 if (r1 = 0 and A5.Action = req1 and !(A1.Action = req1) and !(A2.Action = req1) and !(A3.Action = req1) and !(A4.Action = req1));
-		r1 = 0 if (r1 = 5 and A5.Action = rel1);
-		r1 = 0 if (r1 = 5 and A5.Action = relall);
-		r2 = 3 if (r2 = 0 and A3.Action = req2 and !(A4.Action = req2) and !(A5.Action = req2));
-		r2 = 0 if (r2 = 3 and A3.Action = rel2);
-		r2 = 0 if (r2 = 3 and A3.Action = relall);
-		r2 = 4 if (r2 = 0 and A4.Action = req2 and !(A3.Action = req2) and !(A5.Action = req2));
-		r2 = 0 if (r2 = 4 and A4.Action = rel2);
-		r2 = 0 if (r2 = 4 and A4.Action = relall);
-		r2 = 5 if (r2 = 0 and A5.Action = req2 and !(A3.Action = req2) and !(A4.Action = req2));
-		r2 = 0 if (r2 = 5 and A5.Action = rel2);
-		r2 = 0 if (r2 = 5 and A5.Action = relall);
-		r3 = 1 if (r3 = 0 and A1.Action = req3 and !(A3.Action = req3) and !(A4.Action = req3));
-		r3 = 0 if (r3 = 1 and A1.Action = rel3);
-		r3 = 0 if (r3 = 1 and A1.Action = relall);
-		r3 = 3 if (r3 = 0 and A3.Action = req3 and !(A1.Action = req3) and !(A4.Action = req3));
+		r2 = 1 if (r2 = 0 and A1.Action = req2 and !(A2.Action = req2));
+		r2 = 0 if (r2 = 1 and A1.Action = rel2);
+		r2 = 0 if (r2 = 1 and A1.Action = relall);
+		r2 = 2 if (r2 = 0 and A2.Action = req2 and !(A1.Action = req2));
+		r2 = 0 if (r2 = 2 and A2.Action = rel2);
+		r2 = 0 if (r2 = 2 and A2.Action = relall);
+		r3 = 2 if (r3 = 0 and A2.Action = req3 and !(A3.Action = req3));
+		r3 = 0 if (r3 = 2 and A2.Action = rel3);
+		r3 = 0 if (r3 = 2 and A2.Action = relall);
+		r3 = 3 if (r3 = 0 and A3.Action = req3 and !(A2.Action = req3));
 		r3 = 0 if (r3 = 3 and A3.Action = rel3);
 		r3 = 0 if (r3 = 3 and A3.Action = relall);
-		r3 = 4 if (r3 = 0 and A4.Action = req3 and !(A1.Action = req3) and !(A3.Action = req3));
-		r3 = 0 if (r3 = 4 and A4.Action = rel3);
-		r3 = 0 if (r3 = 4 and A4.Action = relall);
-		r4 = 1 if (r4 = 0 and A1.Action = req4 and !(A2.Action = req4) and !(A5.Action = req4));
-		r4 = 0 if (r4 = 1 and A1.Action = rel4);
-		r4 = 0 if (r4 = 1 and A1.Action = relall);
-		r4 = 2 if (r4 = 0 and A2.Action = req4 and !(A1.Action = req4) and !(A5.Action = req4));
-		r4 = 0 if (r4 = 2 and A2.Action = rel4);
-		r4 = 0 if (r4 = 2 and A2.Action = relall);
-		r4 = 5 if (r4 = 0 and A5.Action = req4 and !(A1.Action = req4) and !(A2.Action = req4));
-		r4 = 0 if (r4 = 5 and A5.Action = rel4);
-		r4 = 0 if (r4 = 5 and A5.Action = relall);
-		r5 = 2 if (r5 = 0 and A2.Action = req5 and !(A3.Action = req5) and !(A4.Action = req5));
-		r5 = 0 if (r5 = 2 and A2.Action = rel5);
-		r5 = 0 if (r5 = 2 and A2.Action = relall);
-		r5 = 3 if (r5 = 0 and A3.Action = req5 and !(A2.Action = req5) and !(A4.Action = req5));
-		r5 = 0 if (r5 = 3 and A3.Action = rel5);
-		r5 = 0 if (r5 = 3 and A3.Action = relall);
-		r5 = 4 if (r5 = 0 and A4.Action = req5 and !(A2.Action = req5) and !(A3.Action = req5));
-		r5 = 0 if (r5 = 4 and A4.Action = rel5);
-		r5 = 0 if (r5 = 4 and A4.Action = relall);
-		r6 = 1 if (r6 = 0 and A1.Action = req6 and !(A2.Action = req6) and !(A3.Action = req6) and !(A5.Action = req6));
-		r6 = 0 if (r6 = 1 and A1.Action = rel6);
-		r6 = 0 if (r6 = 1 and A1.Action = relall);
-		r6 = 2 if (r6 = 0 and A2.Action = req6 and !(A1.Action = req6) and !(A3.Action = req6) and !(A5.Action = req6));
-		r6 = 0 if (r6 = 2 and A2.Action = rel6);
-		r6 = 0 if (r6 = 2 and A2.Action = relall);
-		r6 = 3 if (r6 = 0 and A3.Action = req6 and !(A1.Action = req6) and !(A2.Action = req6) and !(A5.Action = req6));
-		r6 = 0 if (r6 = 3 and A3.Action = rel6);
-		r6 = 0 if (r6 = 3 and A3.Action = relall);
-		r6 = 5 if (r6 = 0 and A5.Action = req6 and !(A1.Action = req6) and !(A2.Action = req6) and !(A3.Action = req6));
-		r6 = 0 if (r6 = 5 and A5.Action = rel6);
-		r6 = 0 if (r6 = 5 and A5.Action = relall);
-		r7 = 2 if (r7 = 0 and A2.Action = req7 and !(A4.Action = req7) and !(A5.Action = req7));
-		r7 = 0 if (r7 = 2 and A2.Action = rel7);
-		r7 = 0 if (r7 = 2 and A2.Action = relall);
-		r7 = 4 if (r7 = 0 and A4.Action = req7 and !(A2.Action = req7) and !(A5.Action = req7));
-		r7 = 0 if (r7 = 4 and A4.Action = rel7);
-		r7 = 0 if (r7 = 4 and A4.Action = relall);
-		r7 = 5 if (r7 = 0 and A5.Action = req7 and !(A2.Action = req7) and !(A4.Action = req7));
-		r7 = 0 if (r7 = 5 and A5.Action = rel7);
-		r7 = 0 if (r7 = 5 and A5.Action = relall);
-		r8 = 1 if (r8 = 0 and A1.Action = req8);
-		r8 = 0 if (r8 = 1 and A1.Action = rel8);
-		r8 = 0 if (r8 = 1 and A1.Action = relall);
 	end Evolution
 end Agent
 
 Agent A1
-	Lobsvars = {r1,r3,r4,r6,r8};
+	Lobsvars = {r1,r2};
 	Vars:
-		rem: 0..3;
+		rem: 0..2;
 	end Vars
-	Actions = {req1,rel1,req3,rel3,req4,rel4,req6,rel6,req8,rel8,relall,idle};
+	Actions = {req1,rel1,req2,rel2,relall,idle};
 	Protocol:
 		rem = 0 : {relall};
 		rem > 0 : {idle};
 		rem > 0 and Environment.r1 = 0 : {req1};
 		rem > 0 and Environment.r1 = 1 : {rel1};
-		rem > 0 and Environment.r3 = 0 : {req3};
-		rem > 0 and Environment.r3 = 1 : {rel3};
-		rem > 0 and Environment.r4 = 0 : {req4};
-		rem > 0 and Environment.r4 = 1 : {rel4};
-		rem > 0 and Environment.r6 = 0 : {req6};
-		rem > 0 and Environment.r6 = 1 : {rel6};
-		rem > 0 and Environment.r8 = 0 : {req8};
-		rem > 0 and Environment.r8 = 1 : {rel8};
+		rem > 0 and Environment.r2 = 0 : {req2};
+		rem > 0 and Environment.r2 = 1 : {rel2};
 	end Protocol
 	Evolution:
-		rem = rem-1 if (Action = req1 and Environment.r1 = 0 and Environment.r1 = 0 and !(A2.Action = req1) and !(A3.Action = req1) and !(A4.Action = req1) and !(A5.Action = req1));
+		rem = rem-1 if (Action = req1 and Environment.r1 = 0 and Environment.r1 = 0 and !(A2.Action = req1));
 		rem = rem+1 if (Action = rel1);
-		rem = 3 if (Action = relall);
-		rem = rem-1 if (Action = req3 and Environment.r3 = 0 and Environment.r3 = 0 and !(A3.Action = req3) and !(A4.Action = req3));
-		rem = rem+1 if (Action = rel3);
-		rem = 3 if (Action = relall);
-		rem = rem-1 if (Action = req4 and Environment.r4 = 0 and Environment.r4 = 0 and !(A2.Action = req4) and !(A5.Action = req4));
-		rem = rem+1 if (Action = rel4);
-		rem = 3 if (Action = relall);
-		rem = rem-1 if (Action = req6 and Environment.r6 = 0 and Environment.r6 = 0 and !(A2.Action = req6) and !(A3.Action = req6) and !(A5.Action = req6));
-		rem = rem+1 if (Action = rel6);
-		rem = 3 if (Action = relall);
-		rem = rem-1 if (Action = req8 and Environment.r8 = 0 and Environment.r8 = 0);
-		rem = rem+1 if (Action = rel8);
-		rem = 3 if (Action = relall);
+		rem = 2 if (Action = relall);
+		rem = rem-1 if (Action = req2 and Environment.r2 = 0 and Environment.r2 = 0 and !(A2.Action = req2));
+		rem = rem+1 if (Action = rel2);
+		rem = 2 if (Action = relall);
 	end Evolution
 end Agent
 
 Agent A2
-	Lobsvars = {r1,r4,r5,r6,r7};
+	Lobsvars = {r1,r2,r3};
 	Vars:
-		rem: 0..4;
+		rem: 0..2;
 	end Vars
-	Actions = {req1,rel1,req4,rel4,req5,rel5,req6,rel6,req7,rel7,relall,idle};
+	Actions = {req1,rel1,req2,rel2,req3,rel3,relall,idle};
 	Protocol:
 		rem = 0 : {relall};
 		rem > 0 : {idle};
 		rem > 0 and Environment.r1 = 0 : {req1};
 		rem > 0 and Environment.r1 = 2 : {rel1};
-		rem > 0 and Environment.r4 = 0 : {req4};
-		rem > 0 and Environment.r4 = 2 : {rel4};
-		rem > 0 and Environment.r5 = 0 : {req5};
-		rem > 0 and Environment.r5 = 2 : {rel5};
-		rem > 0 and Environment.r6 = 0 : {req6};
-		rem > 0 and Environment.r6 = 2 : {rel6};
-		rem > 0 and Environment.r7 = 0 : {req7};
-		rem > 0 and Environment.r7 = 2 : {rel7};
+		rem > 0 and Environment.r2 = 0 : {req2};
+		rem > 0 and Environment.r2 = 2 : {rel2};
+		rem > 0 and Environment.r3 = 0 : {req3};
+		rem > 0 and Environment.r3 = 2 : {rel3};
 	end Protocol
 	Evolution:
-		rem = rem-1 if (Action = req1 and Environment.r1 = 0 and Environment.r1 = 0 and !(A1.Action = req1) and !(A3.Action = req1) and !(A4.Action = req1) and !(A5.Action = req1));
+		rem = rem-1 if (Action = req1 and Environment.r1 = 0 and Environment.r1 = 0 and !(A1.Action = req1));
 		rem = rem+1 if (Action = rel1);
-		rem = 4 if (Action = relall);
-		rem = rem-1 if (Action = req4 and Environment.r4 = 0 and Environment.r4 = 0 and !(A1.Action = req4) and !(A5.Action = req4));
-		rem = rem+1 if (Action = rel4);
-		rem = 4 if (Action = relall);
-		rem = rem-1 if (Action = req5 and Environment.r5 = 0 and Environment.r5 = 0 and !(A3.Action = req5) and !(A4.Action = req5));
-		rem = rem+1 if (Action = rel5);
-		rem = 4 if (Action = relall);
-		rem = rem-1 if (Action = req6 and Environment.r6 = 0 and Environment.r6 = 0 and !(A1.Action = req6) and !(A3.Action = req6) and !(A5.Action = req6));
-		rem = rem+1 if (Action = rel6);
-		rem = 4 if (Action = relall);
-		rem = rem-1 if (Action = req7 and Environment.r7 = 0 and Environment.r7 = 0 and !(A4.Action = req7) and !(A5.Action = req7));
-		rem = rem+1 if (Action = rel7);
-		rem = 4 if (Action = relall);
+		rem = 2 if (Action = relall);
+		rem = rem-1 if (Action = req2 and Environment.r2 = 0 and Environment.r2 = 0 and !(A1.Action = req2));
+		rem = rem+1 if (Action = rel2);
+		rem = 2 if (Action = relall);
+		rem = rem-1 if (Action = req3 and Environment.r3 = 0 and Environment.r3 = 0 and !(A3.Action = req3));
+		rem = rem+1 if (Action = rel3);
+		rem = 2 if (Action = relall);
 	end Evolution
 end Agent
 
 Agent A3
-	Lobsvars = {r1,r2,r3,r5,r6};
+	Lobsvars = {r3};
 	Vars:
-		rem: 0..5;
+		rem: 0..1;
 	end Vars
-	Actions = {req1,rel1,req2,rel2,req3,rel3,req5,rel5,req6,rel6,relall,idle};
+	Actions = {req3,rel3,relall,idle};
 	Protocol:
 		rem = 0 : {relall};
 		rem > 0 : {idle};
-		rem > 0 and Environment.r1 = 0 : {req1};
-		rem > 0 and Environment.r1 = 3 : {rel1};
-		rem > 0 and Environment.r2 = 0 : {req2};
-		rem > 0 and Environment.r2 = 3 : {rel2};
 		rem > 0 and Environment.r3 = 0 : {req3};
 		rem > 0 and Environment.r3 = 3 : {rel3};
-		rem > 0 and Environment.r5 = 0 : {req5};
-		rem > 0 and Environment.r5 = 3 : {rel5};
-		rem > 0 and Environment.r6 = 0 : {req6};
-		rem > 0 and Environment.r6 = 3 : {rel6};
 	end Protocol
 	Evolution:
-		rem = rem-1 if (Action = req1 and Environment.r1 = 0 and Environment.r1 = 0 and !(A1.Action = req1) and !(A2.Action = req1) and !(A4.Action = req1) and !(A5.Action = req1));
-		rem = rem+1 if (Action = rel1);
-		rem = 5 if (Action = relall);
-		rem = rem-1 if (Action = req2 and Environment.r2 = 0 and Environment.r2 = 0 and !(A4.Action = req2) and !(A5.Action = req2));
-		rem = rem+1 if (Action = rel2);
-		rem = 5 if (Action = relall);
-		rem = rem-1 if (Action = req3 and Environment.r3 = 0 and Environment.r3 = 0 and !(A1.Action = req3) and !(A4.Action = req3));
+		rem = rem-1 if (Action = req3 and Environment.r3 = 0 and Environment.r3 = 0 and !(A2.Action = req3));
 		rem = rem+1 if (Action = rel3);
-		rem = 5 if (Action = relall);
-		rem = rem-1 if (Action = req5 and Environment.r5 = 0 and Environment.r5 = 0 and !(A2.Action = req5) and !(A4.Action = req5));
-		rem = rem+1 if (Action = rel5);
-		rem = 5 if (Action = relall);
-		rem = rem-1 if (Action = req6 and Environment.r6 = 0 and Environment.r6 = 0 and !(A1.Action = req6) and !(A2.Action = req6) and !(A5.Action = req6));
-		rem = rem+1 if (Action = rel6);
-		rem = 5 if (Action = relall);
-	end Evolution
-end Agent
-
-Agent A4
-	Lobsvars = {r1,r2,r3,r5,r7};
-	Vars:
-		rem: 0..5;
-	end Vars
-	Actions = {req1,rel1,req2,rel2,req3,rel3,req5,rel5,req7,rel7,relall,idle};
-	Protocol:
-		rem = 0 : {relall};
-		rem > 0 : {idle};
-		rem > 0 and Environment.r1 = 0 : {req1};
-		rem > 0 and Environment.r1 = 4 : {rel1};
-		rem > 0 and Environment.r2 = 0 : {req2};
-		rem > 0 and Environment.r2 = 4 : {rel2};
-		rem > 0 and Environment.r3 = 0 : {req3};
-		rem > 0 and Environment.r3 = 4 : {rel3};
-		rem > 0 and Environment.r5 = 0 : {req5};
-		rem > 0 and Environment.r5 = 4 : {rel5};
-		rem > 0 and Environment.r7 = 0 : {req7};
-		rem > 0 and Environment.r7 = 4 : {rel7};
-	end Protocol
-	Evolution:
-		rem = rem-1 if (Action = req1 and Environment.r1 = 0 and Environment.r1 = 0 and !(A1.Action = req1) and !(A2.Action = req1) and !(A3.Action = req1) and !(A5.Action = req1));
-		rem = rem+1 if (Action = rel1);
-		rem = 5 if (Action = relall);
-		rem = rem-1 if (Action = req2 and Environment.r2 = 0 and Environment.r2 = 0 and !(A3.Action = req2) and !(A5.Action = req2));
-		rem = rem+1 if (Action = rel2);
-		rem = 5 if (Action = relall);
-		rem = rem-1 if (Action = req3 and Environment.r3 = 0 and Environment.r3 = 0 and !(A1.Action = req3) and !(A3.Action = req3));
-		rem = rem+1 if (Action = rel3);
-		rem = 5 if (Action = relall);
-		rem = rem-1 if (Action = req5 and Environment.r5 = 0 and Environment.r5 = 0 and !(A2.Action = req5) and !(A3.Action = req5));
-		rem = rem+1 if (Action = rel5);
-		rem = 5 if (Action = relall);
-		rem = rem-1 if (Action = req7 and Environment.r7 = 0 and Environment.r7 = 0 and !(A2.Action = req7) and !(A5.Action = req7));
-		rem = rem+1 if (Action = rel7);
-		rem = 5 if (Action = relall);
-	end Evolution
-end Agent
-
-Agent A5
-	Lobsvars = {r1,r2,r4,r6,r7};
-	Vars:
-		rem: 0..4;
-	end Vars
-	Actions = {req1,rel1,req2,rel2,req4,rel4,req6,rel6,req7,rel7,relall,idle};
-	Protocol:
-		rem = 0 : {relall};
-		rem > 0 : {idle};
-		rem > 0 and Environment.r1 = 0 : {req1};
-		rem > 0 and Environment.r1 = 5 : {rel1};
-		rem > 0 and Environment.r2 = 0 : {req2};
-		rem > 0 and Environment.r2 = 5 : {rel2};
-		rem > 0 and Environment.r4 = 0 : {req4};
-		rem > 0 and Environment.r4 = 5 : {rel4};
-		rem > 0 and Environment.r6 = 0 : {req6};
-		rem > 0 and Environment.r6 = 5 : {rel6};
-		rem > 0 and Environment.r7 = 0 : {req7};
-		rem > 0 and Environment.r7 = 5 : {rel7};
-	end Protocol
-	Evolution:
-		rem = rem-1 if (Action = req1 and Environment.r1 = 0 and Environment.r1 = 0 and !(A1.Action = req1) and !(A2.Action = req1) and !(A3.Action = req1) and !(A4.Action = req1));
-		rem = rem+1 if (Action = rel1);
-		rem = 4 if (Action = relall);
-		rem = rem-1 if (Action = req2 and Environment.r2 = 0 and Environment.r2 = 0 and !(A3.Action = req2) and !(A4.Action = req2));
-		rem = rem+1 if (Action = rel2);
-		rem = 4 if (Action = relall);
-		rem = rem-1 if (Action = req4 and Environment.r4 = 0 and Environment.r4 = 0 and !(A1.Action = req4) and !(A2.Action = req4));
-		rem = rem+1 if (Action = rel4);
-		rem = 4 if (Action = relall);
-		rem = rem-1 if (Action = req6 and Environment.r6 = 0 and Environment.r6 = 0 and !(A1.Action = req6) and !(A2.Action = req6) and !(A3.Action = req6));
-		rem = rem+1 if (Action = rel6);
-		rem = 4 if (Action = relall);
-		rem = rem-1 if (Action = req7 and Environment.r7 = 0 and Environment.r7 = 0 and !(A2.Action = req7) and !(A4.Action = req7));
-		rem = rem+1 if (Action = rel7);
-		rem = 4 if (Action = relall);
+		rem = 1 if (Action = relall);
 	end Evolution
 end Agent
 
@@ -293,34 +108,28 @@ Evaluation
 	eat1 if (A1.rem=0);
 	eat2 if (A2.rem=0);
 	eat3 if (A3.rem=0);
-	eat4 if (A4.rem=0);
-	eat5 if (A5.rem=0);
 end Evaluation
 
 InitStates
 	Environment.r1=0 and
 	Environment.r2=0 and
 	Environment.r3=0 and
-	Environment.r4=0 and
-	Environment.r5=0 and
-	Environment.r6=0 and
-	Environment.r7=0 and
-	Environment.r8=0 and
-	A1.rem = 3 and
-	A2.rem = 4 and
-	A3.rem = 5 and
-	A4.rem = 5 and
-	A5.rem = 4;
+	A1.rem = 2 and
+	A2.rem = 2 and
+	A3.rem = 1;
 end InitStates
 
 Groups
-	A1A2 = {A1,A2};
-	ALL = {A1,A2,A3,A4,A5};
-	exA1A2 = {A1,A2,A3,A4};
+	A1_A3 = {A1, A2, A3};
+	exA3 = {A1, A2, A3};
+	exA2 = {A1, A2, A3};
+	A1A2 = {A1, A2};
 end Groups
 
 Formulae
-	<ALL>G ((<ALL>F eat1) and (<ALL>F eat2) and (<ALL>F eat3));
-	<A1A2>G ((<A1A2>F eat1) and (<exA1A2>F eat2));
+	(<A1_A3>F eat1) and (<A1_A3>F eat2) and (<A1_A3>F eat3);
+	<exA3>G ((<exA3>F eat1) and (<exA3>F eat2) and (<exA3>F eat3));
+	<A1A2>G (!eat1 and !eat2);
+	(<exA2>F eat1) and (<exA2>F eat2) and (<exA2>F eat3);
 end Formulae
 

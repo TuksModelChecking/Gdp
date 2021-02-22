@@ -2,16 +2,16 @@ from sys import argv
 from yaml import load
 
 class TabTrackingWriter:
-    def __init__(self, file):
-        self.file = file
+    def __init__(self, gdp_file):
+        self.gdp_file = gdp_file
         self.tab_depth = 0
 
     def __del__(self):
-        self.file.close()
+        self.gdp_file.close()
 
     def write(self, string):
         tabs = ("\t" * self.tab_depth)
-        self.file.write(f"{tabs}{string}\n")
+        self.gdp_file.write(f"{tabs}{string}\n")
 
     def write_tab(self, string):
         self.write(string)
@@ -20,6 +20,26 @@ class TabTrackingWriter:
     def untab_write(self, string):
         self.tab_depth -= 1
         self.write(string)
+
+def deduce_groups_from(formulae):
+    groups = set()
+    reading = False
+    group_name = ""
+    for f in formulae:
+        for char in f:
+            if not reading and char == '<':
+                reading = True
+                group_name = ""
+            elif reading:
+                if char == '>':
+                    reading = False
+                    groups.add(group_name)
+                else:
+                    group_name += char
+        if reading:
+            print("Formulae input should always have closing '>' for each group used")
+            raise ValueError
+    return groups
 
 def take_condition(resource, agent, gdp):
     a_id = agent[1:]
@@ -39,59 +59,84 @@ def others_not_requesting(resource, agent, gdp):
             condition += f" and !({a}.Action = req{r_id})"
     return condition
 
-def agents_in_group(num_agents, g):
+def agents_in_group(g):
     agents = g.split('A')[1:]
     agents_explicit = []
     last_agent = None
     for agent in agents:
-        if agent.endswith(".."):
-            last_agent = agent[:-2]
+        if agent.endswith("_"):
+            last_agent = agent[:-1]
             continue
         if last_agent != None:
             for i in range(int(last_agent), int(agent)):
                 agents_explicit.append(i)
             last_agent = None
-        if int(agent) > num_agents or int(agent) < 1:
+        if int(agent) > NUM_AGENTS or int(agent) < 1:
             print(f"\n\terror: agent A{agent} is not defined.\n")
             raise IOError
         agents_explicit.append(agent)
     return agents_explicit
 
-def all_agents(num_agents):
-    agent_set = "{"
-    for agent in range(1, num_agents):
-        agent_set += f"A{agent},"
-    agent_set += f"A{num_agents}"
-    return "ALL = " + agent_set + "};"
+def all_agents():
+    agent_set = set()
+    for agent in range(1, NUM_AGENTS + 1):
+        agent_set.add(f"A{agent}")
+    return agent_set
 
-def all_except(num_agents, g):
-    to_exclude = agents_in_group(num_agents, g)
-    agent_set = "{"
-    for agent in range(1, num_agents):
+def all_except(g):
+    to_exclude = agents_in_group(g)
+    agent_set = set()
+    for agent in range(1, NUM_AGENTS + 1):
         if agent not in to_exclude:
-            agent_set += f"A{agent},"
-    return "ex" + g + " = " + agent_set[:-1] + "};"
+            agent_set.add(f"A{agent}")
+    return agent_set
 
-def specified_group(num_agents, g):
-    agents = agents_in_group(num_agents, g)
-    group_name = ""
-    agent_set = "{"
+def specified_group(g):
+    agents = agents_in_group(g)
+    agent_set = set()
     for a in agents:
-        group_name += f"A{a}"
-        agent_set += f"A{a},"
-    agent_set = agent_set[:-1] + "};"
-    return group_name + " = " + agent_set
+        agent_set.add(f"A{a}")
+    return agent_set
 
-def groups_to_ispl(num_agents, groups):
-    ispl_groups = []
-    for g in groups:
-        if g == "ALL":
-            ispl_groups.append(all_agents(num_agents))
-        elif g.startswith("ex"):
-            ispl_groups.append(all_except(num_agents, g[2:]))
-        else:
-            ispl_groups.append(specified_group(num_agents, g))
-    return ispl_groups
+def explicit_agent_set(g):
+    if g == "ALL":
+        return all_agents()
+    elif g.startswith("ex"):
+        return all_except(g[2:])
+    else:
+        return specified_group(g)
+
+def groups_to_ispl(groups):
+    return [(g + " = " + str(explicit_agent_set(g)).replace('\'','') + ";") for g in groups]
+
+def generate_achieve(acting_group):
+    achieve = ""
+    for a in explicit_agent_set(acting_group):
+        achieve += f"(<{acting_group}>F eat{a[1:]}) and "
+    return achieve[:-5] + ";"
+
+def generate_live(acting_group):
+    live = f"<{acting_group}>G ("
+    for a in explicit_agent_set(acting_group):
+        live += f"(<{acting_group}>F eat{a[1:]}) and "
+    return live[:-5] + ");"
+
+def generate_prevent(acting_group):
+    prevent = f"<{acting_group}>G ("
+    for a in explicit_agent_set(acting_group):
+        prevent += f"!eat{a[1:]} and "
+    return prevent[:-5] + ");"
+
+def generate_ispl_formula(formula):
+    if formula.endswith("achieve"):
+        return generate_achieve(formula[1:-9])
+    elif formula.endswith("live"):
+
+        return generate_live(formula[1:-6])
+    elif formula.endswith("prevent"):
+        return generate_prevent(formula[1:-9])
+    else:
+        return formula
 
 # ============================================================================
 
@@ -109,7 +154,7 @@ else:
     filename = argv[1]
 if filename.endswith((".txt",".yaml")):
     try:
-        file = open(filename, "r")
+        gdp_file = open(filename, "r")
         print(f"Opening file '{filename}'...")
     except IOError:
         print(f"Tried and failed to open '{filename}'")
@@ -118,24 +163,22 @@ if filename.endswith((".txt",".yaml")):
 else:
     print(f"Guessing file extension...")
     try:
-        file = open(filename + ".yaml", "r" )
+        gdp_file = open(filename + ".yaml", "r" )
         print(f"Opening file '{filename}.yaml'...")
     except IOError:
         print(f"Tried and failed to open '{filename}.yaml'")
         try: 
-            file = open(filename + ".txt", "r")
+            gdp_file = open(filename + ".txt", "r")
             print(f"Opening file '{filename}.txt'...")
         except IOError:
             print(f"Tried and failed to open '{filename}.txt'")
             print("Are you sure the filename and relative path is correct?")
-            exit()
-gdp = load(file)
-
+            exit()        
+gdp = load(gdp_file)
 print("Parsing model to ISPL...")
-
-file = open("out.ispl", "w")
-tw = TabTrackingWriter(file)
-num_agents = len(gdp["agents"])
+NUM_AGENTS = len(gdp["agents"])
+gdp_file = open("out.ispl", "w")
+tw = TabTrackingWriter(gdp_file)
 
 tw.write("Semantics=SingleAssignment;\n")
 
@@ -143,7 +186,7 @@ tw.write_tab("Agent Environment")
 tw.write_tab("Vars:")
 for r in gdp["resources"]:
     #Perhaps optimize here to only allow resources to be held by Agents that actually have access to them?
-    tw.write(f"{r}: 0..{num_agents};")
+    tw.write(f"{r}: 0..{NUM_AGENTS};")
 tw.untab_write("end Vars")
 tw.write("Actions = {none};\n\tProtocol:\n\t\tOther: {none};\n\tend Protocol")
 tw.write_tab("Evolution:")
@@ -210,13 +253,13 @@ tw.write(f"{agents[len(agents)-1]}.rem = {gdp[agents[len(agents)-1]]['demand']};
 tw.untab_write("end InitStates\n")
 
 tw.write_tab("Groups")
-for g in groups_to_ispl(len(gdp["agents"]), gdp["groups"]):
+for g in groups_to_ispl(deduce_groups_from(gdp["formulae"])):
     tw.write(g)
 tw.untab_write("end Groups\n")
 
 tw.write_tab("Formulae")
 for f in gdp["formulae"]:
-    tw.write(f)
+    tw.write(generate_ispl_formula(f))
 tw.untab_write("end Formulae\n")
 
 tw.__del__()
