@@ -2,16 +2,16 @@ from sys import argv
 from yaml import load
 
 class TabTrackingWriter:
-    def __init__(self, gdp_file):
-        self.gdp_file = gdp_file
+    def __init__(self, ispl_file):
+        self.ispl_file = ispl_file
         self.tab_depth = 0
 
     def __del__(self):
-        self.gdp_file.close()
+        self.ispl_file.close()
 
     def write(self, string):
         tabs = ("\t" * self.tab_depth)
-        self.gdp_file.write(f"{tabs}{string}\n")
+        self.ispl_file.write(f"{tabs}{string}\n")
 
     def write_tab(self, string):
         self.write(string)
@@ -37,7 +37,7 @@ def deduce_groups_from(formulae):
                 else:
                     group_name += char
         if reading:
-            print("Formulae input should always have closing '>' for each group used")
+            print("Formulae input should always have closing '>' for each agent group used")
             raise ValueError
     return groups
 
@@ -45,7 +45,8 @@ def take_condition(resource, agent, gdp):
     a_id = agent[1:]
     r_id = resource[1:]
     condition = f"{resource} = 0 and {agent}.Action = req{r_id}"
-    for a in gdp["agents"]:
+    for i in range(1, NUM_AGENTS+1):
+        a = f"A{i}"
         if a != agent and resource in gdp[a]["access"]:
             condition += f" and !({a}.Action = req{r_id})"
     return condition
@@ -54,7 +55,8 @@ def others_not_requesting(resource, agent, gdp):
     a_id = agent[1:]
     r_id = resource[1:]
     condition = f"Environment.{resource} = 0"
-    for a in gdp["agents"]:
+    for i in range(1, NUM_AGENTS+1):
+        a = f"A{i}"
         if a != agent and resource in gdp[a]["access"]:
             condition += f" and !({a}.Action = req{r_id})"
     return condition
@@ -99,7 +101,7 @@ def specified_group(g):
     return agent_set
 
 def explicit_agent_set(g):
-    if g == "ALL":
+    if g == "all":
         return all_agents()
     elif g.startswith("ex"):
         return all_except(g[2:])
@@ -123,18 +125,20 @@ def generate_live(acting_group):
 
 def generate_prevent(acting_group):
     prevent = f"<{acting_group}>G ("
-    for a in explicit_agent_set(acting_group):
-        prevent += f"!eat{a[1:]} and "
+    for i in range(1, NUM_AGENTS+1):
+        if f"A{i}" not in explicit_agent_set(acting_group):
+            prevent += f"!eat{i} and "
     return prevent[:-5] + ");"
 
 def generate_ispl_formula(formula):
+    formula = formula.strip()
+    group = formula[formula.find('<')+1:formula.find('>')]
     if formula.endswith("achieve"):
-        return generate_achieve(formula[1:-9])
+        return generate_achieve(group)
     elif formula.endswith("live"):
-
-        return generate_live(formula[1:-6])
+        return generate_live(group)
     elif formula.endswith("prevent"):
-        return generate_prevent(formula[1:-9])
+        return generate_prevent(group)
     else:
         return formula
 
@@ -168,7 +172,7 @@ else:
     except IOError:
         print(f"Tried and failed to open '{filename}.yaml'")
         try: 
-            gdp_file = open(filename + ".txt", "r")
+            gdpl_file = open(filename + ".txt", "r")
             print(f"Opening file '{filename}.txt'...")
         except IOError:
             print(f"Tried and failed to open '{filename}.txt'")
@@ -176,38 +180,55 @@ else:
             exit()        
 gdp = load(gdp_file)
 print("Parsing model to ISPL...")
-NUM_AGENTS = len(gdp["agents"])
-gdp_file = open("out.ispl", "w")
-tw = TabTrackingWriter(gdp_file)
+NUM_AGENTS = gdp["num_agents"]
+OBSERVABLE = explicit_agent_set(
+    gdp["observable"].strip()[1:-1]
+)
+
+ispl_file = open("out.ispl", "w")
+tw = TabTrackingWriter(ispl_file)
 
 tw.write("Semantics=SingleAssignment;\n")
 
 tw.write_tab("Agent Environment")
 tw.write_tab("Vars:")
-for r in gdp["resources"]:
+for i in range(1, gdp["num_resources"]+1):
     #Perhaps optimize here to only allow resources to be held by Agents that actually have access to them?
-    tw.write(f"{r}: 0..{NUM_AGENTS};")
+    tw.write(f"r{i}: 0..{NUM_AGENTS};")
+for a in OBSERVABLE:
+    demand = gdp[a]["demand"]
+    tw.write(f"rem{a[1:]} : 0..{demand};")
 tw.untab_write("end Vars")
 tw.write("Actions = {none};\n\tProtocol:\n\t\tOther: {none};\n\tend Protocol")
 tw.write_tab("Evolution:")
-for r in gdp["resources"]:
-    for a in gdp["agents"]:
+for i in range(1, gdp["num_resources"]+1):
+    r = f"r{i}"
+    for i in range(1, NUM_AGENTS+1):
+        a = f"A{i}"
         if r in gdp[a]["access"]:
-            tw.write(f"{r} = {a[1:]} if ({take_condition(r, a, gdp)});")
-            tw.write(f"{r} = 0 if ({r} = {a[1:]} and {a}.Action = rel{r[1:]});")
-            tw.write(f"{r} = 0 if ({r} = {a[1:]} and {a}.Action = relall);")
+            tw.write(f"{r} = {i} if ({take_condition(r, a, gdp)});")
+            tw.write(f"{r} = 0 if ({r} = {i} and A{i}.Action = rel{r[1:]});")
+            tw.write(f"{r} = 0 if ({r} = {i} and A{i}.Action = relall);")
+            if a in OBSERVABLE:
+                tw.write(f"rem{i} = rem{i}-1 if ({take_condition(r, a, gdp)});")
+                tw.write(f"rem{i} = rem{i}+1 if ({r} = {i} and A{i}.Action = rel{r[1:]});")
+                tw.write(f"rem{i} = {gdp[a]['demand']} if ({r} = {i} and A{i}.Action = relall);")
+        
 tw.untab_write("end Evolution")
 tw.untab_write("end Agent\n")
 
-for a in gdp["agents"]:
-    tw.write_tab(f"Agent {a}")
+for i in range(1, NUM_AGENTS+1):
+    agent = f"A{i}"
+    tw.write_tab(f"Agent A{i}")
     actions = "{"
     lobsvars = "{"
-    for r in gdp[a]["access"]:
+    for r in gdp[agent]["access"]:
         actions += f"req{r[1:]},"
         actions += f"rel{r[1:]},"
         lobsvars += r
         lobsvars += ","
+    for a in OBSERVABLE:
+        lobsvars += f"rem{a[1:]},"
     if len(lobsvars) == 1:
         lobsvars = "{none};"
         actions = "{idle};"
@@ -216,46 +237,65 @@ for a in gdp["agents"]:
         lobsvars = lobsvars[:-1] + "};"
     tw.write(f"Lobsvars = {lobsvars}")
     tw.write_tab("Vars:")
-    demand = gdp[a]["demand"]
-    tw.write(f"rem: 0..{demand};")
+    demand = gdp[agent]["demand"]
+    tw.write(f"rem : 0..{demand};")
+    if gdp["fairness"] != None and gdp["fairness"] == "-on":
+        tw.write(f"idl : boolean;")
     tw.untab_write("end Vars")
     tw.write(f"Actions = {actions}")
     tw.write_tab("Protocol:")
     tw.write("rem = 0 : {relall};")
     tw.write("rem > 0 : {idle};")
-    for my_r in gdp[a]["access"]:
+    for my_r in gdp[agent]["access"]:
         req = "{req" + my_r[1:] + "}"
         rel = "{rel" + my_r[1:] + "}"
         tw.write(f"rem > 0 and Environment.{my_r} = 0 : {req};")
-        tw.write(f"rem > 0 and Environment.{my_r} = {a[1:]} : {rel};")
+        tw.write(f"rem > 0 and Environment.{my_r} = {i} : {rel};")
     tw.untab_write("end Protocol")
     tw.write_tab("Evolution:")
-    for my_r in gdp[a]["access"]:
-        onr = others_not_requesting(my_r, a, gdp)
+    for my_r in gdp[agent]["access"]:
+        onr = others_not_requesting(my_r, agent, gdp)
         tw.write(f"rem = rem-1 if (Action = req{my_r[1:]} and Environment.{my_r} = 0 and {onr});")
         tw.write(f"rem = rem+1 if (Action = rel{my_r[1:]});")
-        tw.write(f"rem = {gdp[a]['demand']} if (Action = relall);")
+        tw.write(f"rem = {gdp[agent]['demand']} if (Action = relall);")
+        if gdp["fairness"] != None and gdp["fairness"] == "-on":
+            tw.write(f"idl = false if (Action = req{my_r[1:]} and Environment.{my_r} = 0 and {onr});")
+            tw.write(f"idl = false if (Action = rel{my_r[1:]});")
+            tw.write(f"idl = false if (Action = relall);")
+            tw.write(f"idl = true if (Action = idle);")
     tw.untab_write("end Evolution")
     tw.untab_write(f"end Agent\n")
 
 tw.write_tab("Evaluation")
-for a in gdp["agents"]:
-    tw.write(f"eat{a[1:]} if ({a}.rem=0);")
+for i in range(1, NUM_AGENTS+1):
+    tw.write(f"eat{i} if (A{i}.rem=0);")
+if gdp["fairness"] != None and gdp["fairness"] == "-on":
+    for i in range(1, NUM_AGENTS+1):
+        tw.write(f"not_idle{i} if (A{i}.idl=false);")
 tw.untab_write("end Evaluation\n")
 
 tw.write_tab("InitStates")
-for r in gdp["resources"]:
+for i in range(1, gdp["num_resources"]+1):
+    r = f"r{i}"
     tw.write(f"Environment.{r}=0 and")
-agents = gdp["agents"]
-for i in range(0, len(agents)-1):
-    tw.write(f"{agents[i]}.rem = {gdp[agents[i]]['demand']} and")
-tw.write(f"{agents[len(agents)-1]}.rem = {gdp[agents[len(agents)-1]]['demand']};")
+agents = [f"A{i}" for i in range(1, NUM_AGENTS+1)]
+for a in OBSERVABLE:
+    tw.write(f"Environment.rem{a[1:]}={gdp[a]['demand']} and")
+for i in range(0, NUM_AGENTS-1):
+    tw.write(f"{agents[i]}.rem={gdp[agents[i]]['demand']} and")
+tw.write(f"{agents[NUM_AGENTS-1]}.rem={gdp[agents[NUM_AGENTS-1]]['demand']};")
 tw.untab_write("end InitStates\n")
 
 tw.write_tab("Groups")
 for g in groups_to_ispl(deduce_groups_from(gdp["formulae"])):
     tw.write(g)
 tw.untab_write("end Groups\n")
+
+tw.write_tab("Fairness")
+if gdp["fairness"] != None and gdp["fairness"] == "-on":
+    for i in range(1, NUM_AGENTS+1):
+        tw.write(f"not_idle{i};")
+tw.untab_write("end Fairness\n")
 
 tw.write_tab("Formulae")
 for f in gdp["formulae"]:

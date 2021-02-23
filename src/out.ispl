@@ -5,6 +5,8 @@ Agent Environment
 		r1: 0..3;
 		r2: 0..3;
 		r3: 0..3;
+		rem3 : 0..1;
+		rem1 : 0..2;
 	end Vars
 	Actions = {none};
 	Protocol:
@@ -14,12 +16,18 @@ Agent Environment
 		r1 = 1 if (r1 = 0 and A1.Action = req1 and !(A2.Action = req1));
 		r1 = 0 if (r1 = 1 and A1.Action = rel1);
 		r1 = 0 if (r1 = 1 and A1.Action = relall);
+		rem1 = rem1-1 if (r1 = 0 and A1.Action = req1 and !(A2.Action = req1));
+		rem1 = rem1+1 if (r1 = 1 and A1.Action = rel1);
+		rem1 = 2 if (r1 = 1 and A1.Action = relall);
 		r1 = 2 if (r1 = 0 and A2.Action = req1 and !(A1.Action = req1));
 		r1 = 0 if (r1 = 2 and A2.Action = rel1);
 		r1 = 0 if (r1 = 2 and A2.Action = relall);
 		r2 = 1 if (r2 = 0 and A1.Action = req2 and !(A2.Action = req2));
 		r2 = 0 if (r2 = 1 and A1.Action = rel2);
 		r2 = 0 if (r2 = 1 and A1.Action = relall);
+		rem1 = rem1-1 if (r2 = 0 and A1.Action = req2 and !(A2.Action = req2));
+		rem1 = rem1+1 if (r2 = 1 and A1.Action = rel2);
+		rem1 = 2 if (r2 = 1 and A1.Action = relall);
 		r2 = 2 if (r2 = 0 and A2.Action = req2 and !(A1.Action = req2));
 		r2 = 0 if (r2 = 2 and A2.Action = rel2);
 		r2 = 0 if (r2 = 2 and A2.Action = relall);
@@ -29,13 +37,17 @@ Agent Environment
 		r3 = 3 if (r3 = 0 and A3.Action = req3 and !(A2.Action = req3));
 		r3 = 0 if (r3 = 3 and A3.Action = rel3);
 		r3 = 0 if (r3 = 3 and A3.Action = relall);
+		rem3 = rem3-1 if (r3 = 0 and A3.Action = req3 and !(A2.Action = req3));
+		rem3 = rem3+1 if (r3 = 3 and A3.Action = rel3);
+		rem3 = 1 if (r3 = 3 and A3.Action = relall);
 	end Evolution
 end Agent
 
 Agent A1
-	Lobsvars = {r1,r2};
+	Lobsvars = {r1,r2,rem3,rem1};
 	Vars:
-		rem: 0..2;
+		rem : 0..2;
+		idl : boolean;
 	end Vars
 	Actions = {req1,rel1,req2,rel2,relall,idle};
 	Protocol:
@@ -50,16 +62,25 @@ Agent A1
 		rem = rem-1 if (Action = req1 and Environment.r1 = 0 and Environment.r1 = 0 and !(A2.Action = req1));
 		rem = rem+1 if (Action = rel1);
 		rem = 2 if (Action = relall);
+		idl = false if (Action = req1 and Environment.r1 = 0 and Environment.r1 = 0 and !(A2.Action = req1));
+		idl = false if (Action = rel1);
+		idl = false if (Action = relall);
+		idl = true if (Action = idle);
 		rem = rem-1 if (Action = req2 and Environment.r2 = 0 and Environment.r2 = 0 and !(A2.Action = req2));
 		rem = rem+1 if (Action = rel2);
 		rem = 2 if (Action = relall);
+		idl = false if (Action = req2 and Environment.r2 = 0 and Environment.r2 = 0 and !(A2.Action = req2));
+		idl = false if (Action = rel2);
+		idl = false if (Action = relall);
+		idl = true if (Action = idle);
 	end Evolution
 end Agent
 
 Agent A2
-	Lobsvars = {r1,r2,r3};
+	Lobsvars = {r1,r2,r3,rem3,rem1};
 	Vars:
-		rem: 0..2;
+		rem : 0..2;
+		idl : boolean;
 	end Vars
 	Actions = {req1,rel1,req2,rel2,req3,rel3,relall,idle};
 	Protocol:
@@ -76,19 +97,32 @@ Agent A2
 		rem = rem-1 if (Action = req1 and Environment.r1 = 0 and Environment.r1 = 0 and !(A1.Action = req1));
 		rem = rem+1 if (Action = rel1);
 		rem = 2 if (Action = relall);
+		idl = false if (Action = req1 and Environment.r1 = 0 and Environment.r1 = 0 and !(A1.Action = req1));
+		idl = false if (Action = rel1);
+		idl = false if (Action = relall);
+		idl = true if (Action = idle);
 		rem = rem-1 if (Action = req2 and Environment.r2 = 0 and Environment.r2 = 0 and !(A1.Action = req2));
 		rem = rem+1 if (Action = rel2);
 		rem = 2 if (Action = relall);
+		idl = false if (Action = req2 and Environment.r2 = 0 and Environment.r2 = 0 and !(A1.Action = req2));
+		idl = false if (Action = rel2);
+		idl = false if (Action = relall);
+		idl = true if (Action = idle);
 		rem = rem-1 if (Action = req3 and Environment.r3 = 0 and Environment.r3 = 0 and !(A3.Action = req3));
 		rem = rem+1 if (Action = rel3);
 		rem = 2 if (Action = relall);
+		idl = false if (Action = req3 and Environment.r3 = 0 and Environment.r3 = 0 and !(A3.Action = req3));
+		idl = false if (Action = rel3);
+		idl = false if (Action = relall);
+		idl = true if (Action = idle);
 	end Evolution
 end Agent
 
 Agent A3
-	Lobsvars = {r3};
+	Lobsvars = {r3,rem3,rem1};
 	Vars:
-		rem: 0..1;
+		rem : 0..1;
+		idl : boolean;
 	end Vars
 	Actions = {req3,rel3,relall,idle};
 	Protocol:
@@ -101,6 +135,10 @@ Agent A3
 		rem = rem-1 if (Action = req3 and Environment.r3 = 0 and Environment.r3 = 0 and !(A2.Action = req3));
 		rem = rem+1 if (Action = rel3);
 		rem = 1 if (Action = relall);
+		idl = false if (Action = req3 and Environment.r3 = 0 and Environment.r3 = 0 and !(A2.Action = req3));
+		idl = false if (Action = rel3);
+		idl = false if (Action = relall);
+		idl = true if (Action = idle);
 	end Evolution
 end Agent
 
@@ -108,28 +146,39 @@ Evaluation
 	eat1 if (A1.rem=0);
 	eat2 if (A2.rem=0);
 	eat3 if (A3.rem=0);
+	not_idle1 if (A1.idl=false);
+	not_idle2 if (A2.idl=false);
+	not_idle3 if (A3.idl=false);
 end Evaluation
 
 InitStates
 	Environment.r1=0 and
 	Environment.r2=0 and
 	Environment.r3=0 and
-	A1.rem = 2 and
-	A2.rem = 2 and
-	A3.rem = 1;
+	Environment.rem3=1 and
+	Environment.rem1=2 and
+	A1.rem=2 and
+	A2.rem=2 and
+	A3.rem=1;
 end InitStates
 
 Groups
-	A1_A3 = {A1, A2, A3};
-	exA3 = {A1, A2, A3};
-	exA2 = {A1, A2, A3};
-	A1A2 = {A1, A2};
+	exA2 = {A3, A2, A1};
+	A1A2 = {A2, A1};
+	A2 = {A2};
+	A1 = {A1};
 end Groups
 
+Fairness
+	not_idle1;
+	not_idle2;
+	not_idle3;
+end Fairness
+
 Formulae
-	(<A1_A3>F eat1) and (<A1_A3>F eat2) and (<A1_A3>F eat3);
-	<exA3>G ((<exA3>F eat1) and (<exA3>F eat2) and (<exA3>F eat3));
-	<A1A2>G (!eat1 and !eat2);
-	(<exA2>F eat1) and (<exA2>F eat2) and (<exA2>F eat3);
+	(<A1>F eat1);
+	<exA2>G ((<exA2>F eat3) and (<exA2>F eat2) and (<exA2>F eat1));
+	<A1A2>G (!eat3);
+	<A2>G (!eat1 and !eat3);
 end Formulae
 
