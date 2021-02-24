@@ -21,9 +21,9 @@ a3:
   demand: 1
   access:
     - r1
-observable: <a1_a3>
-fairness: -off
+observable: <a1__a3>
+fairness: -on
 formulae:
   - <a1_a3_a2> achieve
-  - <a1__a2> live
+  - <a1__a3> live
   - <EXa2_a3> prevent

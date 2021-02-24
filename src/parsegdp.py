@@ -162,13 +162,13 @@ else:
             exit()        
 gdp = load(gdp_file)
 print("Parsing model to ISPL...")
-OBSERVABLE = explicit_agent_set(
-    gdp["observable"].strip()[1:-1]
-)
 AGENTS = sorted(gdp["agents"])
 RESOURCES = sorted(gdp["resources"])
 NUM_AGENTS = len(AGENTS)
 NUM_RESOURCES = len(RESOURCES)
+OBSERVABLE = explicit_agent_set(
+    gdp["observable"].strip()[1:-1]
+)
 
 ispl_file = open("out.ispl", "w")
 tw = TabTrackingWriter(ispl_file)
@@ -268,7 +268,6 @@ for a in OBSERVABLE:
     tw.write(f"Environment.rem_{a}={gdp[a]['demand']} and")
 for i in range(1, NUM_AGENTS-1):
     tw.write(f"{AGENTS[i]}.rem={gdp[AGENTS[i]]['demand']} and")
-print(AGENTS)
 tw.write(f"{AGENTS[NUM_AGENTS-1]}.rem={gdp[AGENTS[NUM_AGENTS-1]]['demand']};")
 tw.untab_write("end InitStates\n")
 
