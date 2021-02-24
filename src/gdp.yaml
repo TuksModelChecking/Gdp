@@ -1,29 +1,29 @@
-agents: # explicitly enumerate or just give amount, then assume we are using standard notation system
-  - dog
-  - cat
-  - mouse
+agents:
+  - A1
+  - A2
+  - A3
 resources:
-  - bowl
-  - garden
-  - bed
-cat:
+  - r1
+  - r2
+  - r3
+A1:
   demand: 2
   access:
-    - bowl
-    - garden
-dog:
+    - r1
+    - r2
+A2:
   demand: 2
   access:
-    - bowl
-    - garden
-    - bed
-mouse:
+    - r1
+    - r2
+    - r3
+A3:
   demand: 1
   access:
-    - bed
-observable: <cat_dog>
+    - r3
+observable: <A1_A3>
 fairness: -on
 formulae:
-  - <cat_mouse_dog> achieve
-  - <cat__mouse> live
-  - <mouse> prevent
+  - <A1_A2_A3> achieve
+  - <A1__A3> live
+  - <EXA1_A3> prevent

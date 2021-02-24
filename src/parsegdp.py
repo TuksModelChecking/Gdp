@@ -267,7 +267,8 @@ for r in RESOURCES:
 for a in OBSERVABLE:
     tw.write(f"Environment.rem_{a}={gdp[a]['demand']} and")
 for i in range(1, NUM_AGENTS-1):
-    tw.write(f"{a}.rem={gdp[AGENTS[i]]['demand']} and")
+    tw.write(f"{AGENTS[i]}.rem={gdp[AGENTS[i]]['demand']} and")
+print(AGENTS)
 tw.write(f"{AGENTS[NUM_AGENTS-1]}.rem={gdp[AGENTS[NUM_AGENTS-1]]['demand']};")
 tw.untab_write("end InitStates\n")
 

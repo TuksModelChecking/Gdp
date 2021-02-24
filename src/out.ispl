@@ -2,186 +2,180 @@ Semantics=SingleAssignment;
 
 Agent Environment
 	Vars:
-		bed: {none,dog,mouse};
-		bowl: {none,cat,dog};
-		garden: {none,cat,dog};
-		rem_dog : 0..2;
-		rem_cat : 0..2;
+		r1: {none,A1,A2};
+		r2: {none,A1,A2};
+		r3: {none,A2,A3};
+		rem_A3 : 0..1;
+		rem_A1 : 0..2;
 	end Vars
 	Actions = {none};
 	Protocol:
 		Other: {none};
 	end Protocol
 	Evolution:
-		bed=dog if (bed=none and dog.Action=req_bed and !(mouse.Action=req_bed));
-		bed=none if (bed=dog and dog.Action=rel_bed);
-		bed=none if (bed=dog and dog.Action=relall);
-		rem_dog=rem_dog-1 if (bed=none and dog.Action=req_bed and !(mouse.Action=req_bed));
-		rem_dog=rem_dog+1 if (bed=dog and dog.Action=rel_bed);
-		rem_dog=2 if (bed=dog and dog.Action=relall);
-		bed=mouse if (bed=none and mouse.Action=req_bed and !(dog.Action=req_bed));
-		bed=none if (bed=mouse and mouse.Action=rel_bed);
-		bed=none if (bed=mouse and mouse.Action=relall);
-		bowl=cat if (bowl=none and cat.Action=req_bowl and !(dog.Action=req_bowl));
-		bowl=none if (bowl=cat and cat.Action=rel_bowl);
-		bowl=none if (bowl=cat and cat.Action=relall);
-		rem_cat=rem_cat-1 if (bowl=none and cat.Action=req_bowl and !(dog.Action=req_bowl));
-		rem_cat=rem_cat+1 if (bowl=cat and cat.Action=rel_bowl);
-		rem_cat=2 if (bowl=cat and cat.Action=relall);
-		bowl=dog if (bowl=none and dog.Action=req_bowl and !(cat.Action=req_bowl));
-		bowl=none if (bowl=dog and dog.Action=rel_bowl);
-		bowl=none if (bowl=dog and dog.Action=relall);
-		rem_dog=rem_dog-1 if (bowl=none and dog.Action=req_bowl and !(cat.Action=req_bowl));
-		rem_dog=rem_dog+1 if (bowl=dog and dog.Action=rel_bowl);
-		rem_dog=2 if (bowl=dog and dog.Action=relall);
-		garden=cat if (garden=none and cat.Action=req_garden and !(dog.Action=req_garden));
-		garden=none if (garden=cat and cat.Action=rel_garden);
-		garden=none if (garden=cat and cat.Action=relall);
-		rem_cat=rem_cat-1 if (garden=none and cat.Action=req_garden and !(dog.Action=req_garden));
-		rem_cat=rem_cat+1 if (garden=cat and cat.Action=rel_garden);
-		rem_cat=2 if (garden=cat and cat.Action=relall);
-		garden=dog if (garden=none and dog.Action=req_garden and !(cat.Action=req_garden));
-		garden=none if (garden=dog and dog.Action=rel_garden);
-		garden=none if (garden=dog and dog.Action=relall);
-		rem_dog=rem_dog-1 if (garden=none and dog.Action=req_garden and !(cat.Action=req_garden));
-		rem_dog=rem_dog+1 if (garden=dog and dog.Action=rel_garden);
-		rem_dog=2 if (garden=dog and dog.Action=relall);
+		r1=A1 if (r1=none and A1.Action=req_r1 and !(A2.Action=req_r1));
+		r1=none if (r1=A1 and A1.Action=rel_r1);
+		r1=none if (r1=A1 and A1.Action=relall);
+		rem_A1=rem_A1-1 if (r1=none and A1.Action=req_r1 and !(A2.Action=req_r1));
+		rem_A1=rem_A1+1 if (r1=A1 and A1.Action=rel_r1);
+		rem_A1=2 if (r1=A1 and A1.Action=relall);
+		r1=A2 if (r1=none and A2.Action=req_r1 and !(A1.Action=req_r1));
+		r1=none if (r1=A2 and A2.Action=rel_r1);
+		r1=none if (r1=A2 and A2.Action=relall);
+		r2=A1 if (r2=none and A1.Action=req_r2 and !(A2.Action=req_r2));
+		r2=none if (r2=A1 and A1.Action=rel_r2);
+		r2=none if (r2=A1 and A1.Action=relall);
+		rem_A1=rem_A1-1 if (r2=none and A1.Action=req_r2 and !(A2.Action=req_r2));
+		rem_A1=rem_A1+1 if (r2=A1 and A1.Action=rel_r2);
+		rem_A1=2 if (r2=A1 and A1.Action=relall);
+		r2=A2 if (r2=none and A2.Action=req_r2 and !(A1.Action=req_r2));
+		r2=none if (r2=A2 and A2.Action=rel_r2);
+		r2=none if (r2=A2 and A2.Action=relall);
+		r3=A2 if (r3=none and A2.Action=req_r3 and !(A3.Action=req_r3));
+		r3=none if (r3=A2 and A2.Action=rel_r3);
+		r3=none if (r3=A2 and A2.Action=relall);
+		r3=A3 if (r3=none and A3.Action=req_r3 and !(A2.Action=req_r3));
+		r3=none if (r3=A3 and A3.Action=rel_r3);
+		r3=none if (r3=A3 and A3.Action=relall);
+		rem_A3=rem_A3-1 if (r3=none and A3.Action=req_r3 and !(A2.Action=req_r3));
+		rem_A3=rem_A3+1 if (r3=A3 and A3.Action=rel_r3);
+		rem_A3=1 if (r3=A3 and A3.Action=relall);
 	end Evolution
 end Agent
 
-Agent cat
-	Lobsvars = {bowl,garden,rem_dog,rem_cat};
+Agent A1
+	Lobsvars = {r1,r2,rem_A3,rem_A1};
 	Vars:
 		rem : 0..2;
 		idl : boolean;
 	end Vars
-	Actions = {req_bowl,rel_bowl,req_garden,rel_garden,relall,idle};
+	Actions = {req_r1,rel_r1,req_r2,rel_r2,relall,idle};
 	Protocol:
 		rem = 0 : {relall};
 		rem > 0 : {idle};
-		rem > 0 and Environment.bowl=none : {req_bowl};
-		rem > 0 and Environment.bowl=cat : {rel_bowl};
-		rem > 0 and Environment.garden=none : {req_garden};
-		rem > 0 and Environment.garden=cat : {rel_garden};
+		rem > 0 and Environment.r1=none : {req_r1};
+		rem > 0 and Environment.r1=A1 : {rel_r1};
+		rem > 0 and Environment.r2=none : {req_r2};
+		rem > 0 and Environment.r2=A1 : {rel_r2};
 	end Protocol
 	Evolution:
-		rem=rem-1 if (Action=req_bowl and Environment.bowl=none and Environment.bowl = none and !(dog.Action=req_bowl));
-		rem=rem+1 if (Action=rel_bowl);
+		rem=rem-1 if (Action=req_r1 and Environment.r1=none and Environment.r1 = none and !(A2.Action=req_r1));
+		rem=rem+1 if (Action=rel_r1);
 		rem=2 if (Action=relall);
-		idl=false if (Action=req_bowl and Environment.bowl=none and Environment.bowl = none and !(dog.Action=req_bowl));
-		idl=false if (Action=rel_bowl);
+		idl=false if (Action=req_r1 and Environment.r1=none and Environment.r1 = none and !(A2.Action=req_r1));
+		idl=false if (Action=rel_r1);
 		idl=false if (Action=relall);
 		idl=true if (Action=idle);
-		rem=rem-1 if (Action=req_garden and Environment.garden=none and Environment.garden = none and !(dog.Action=req_garden));
-		rem=rem+1 if (Action=rel_garden);
+		rem=rem-1 if (Action=req_r2 and Environment.r2=none and Environment.r2 = none and !(A2.Action=req_r2));
+		rem=rem+1 if (Action=rel_r2);
 		rem=2 if (Action=relall);
-		idl=false if (Action=req_garden and Environment.garden=none and Environment.garden = none and !(dog.Action=req_garden));
-		idl=false if (Action=rel_garden);
+		idl=false if (Action=req_r2 and Environment.r2=none and Environment.r2 = none and !(A2.Action=req_r2));
+		idl=false if (Action=rel_r2);
 		idl=false if (Action=relall);
 		idl=true if (Action=idle);
 	end Evolution
 end Agent
 
-Agent dog
-	Lobsvars = {bowl,garden,bed,rem_dog,rem_cat};
+Agent A2
+	Lobsvars = {r1,r2,r3,rem_A3,rem_A1};
 	Vars:
 		rem : 0..2;
 		idl : boolean;
 	end Vars
-	Actions = {req_bowl,rel_bowl,req_garden,rel_garden,req_bed,rel_bed,relall,idle};
+	Actions = {req_r1,rel_r1,req_r2,rel_r2,req_r3,rel_r3,relall,idle};
 	Protocol:
 		rem = 0 : {relall};
 		rem > 0 : {idle};
-		rem > 0 and Environment.bowl=none : {req_bowl};
-		rem > 0 and Environment.bowl=dog : {rel_bowl};
-		rem > 0 and Environment.garden=none : {req_garden};
-		rem > 0 and Environment.garden=dog : {rel_garden};
-		rem > 0 and Environment.bed=none : {req_bed};
-		rem > 0 and Environment.bed=dog : {rel_bed};
+		rem > 0 and Environment.r1=none : {req_r1};
+		rem > 0 and Environment.r1=A2 : {rel_r1};
+		rem > 0 and Environment.r2=none : {req_r2};
+		rem > 0 and Environment.r2=A2 : {rel_r2};
+		rem > 0 and Environment.r3=none : {req_r3};
+		rem > 0 and Environment.r3=A2 : {rel_r3};
 	end Protocol
 	Evolution:
-		rem=rem-1 if (Action=req_bowl and Environment.bowl=none and Environment.bowl = none and !(cat.Action=req_bowl));
-		rem=rem+1 if (Action=rel_bowl);
+		rem=rem-1 if (Action=req_r1 and Environment.r1=none and Environment.r1 = none and !(A1.Action=req_r1));
+		rem=rem+1 if (Action=rel_r1);
 		rem=2 if (Action=relall);
-		idl=false if (Action=req_bowl and Environment.bowl=none and Environment.bowl = none and !(cat.Action=req_bowl));
-		idl=false if (Action=rel_bowl);
+		idl=false if (Action=req_r1 and Environment.r1=none and Environment.r1 = none and !(A1.Action=req_r1));
+		idl=false if (Action=rel_r1);
 		idl=false if (Action=relall);
 		idl=true if (Action=idle);
-		rem=rem-1 if (Action=req_garden and Environment.garden=none and Environment.garden = none and !(cat.Action=req_garden));
-		rem=rem+1 if (Action=rel_garden);
+		rem=rem-1 if (Action=req_r2 and Environment.r2=none and Environment.r2 = none and !(A1.Action=req_r2));
+		rem=rem+1 if (Action=rel_r2);
 		rem=2 if (Action=relall);
-		idl=false if (Action=req_garden and Environment.garden=none and Environment.garden = none and !(cat.Action=req_garden));
-		idl=false if (Action=rel_garden);
+		idl=false if (Action=req_r2 and Environment.r2=none and Environment.r2 = none and !(A1.Action=req_r2));
+		idl=false if (Action=rel_r2);
 		idl=false if (Action=relall);
 		idl=true if (Action=idle);
-		rem=rem-1 if (Action=req_bed and Environment.bed=none and Environment.bed = none and !(mouse.Action=req_bed));
-		rem=rem+1 if (Action=rel_bed);
+		rem=rem-1 if (Action=req_r3 and Environment.r3=none and Environment.r3 = none and !(A3.Action=req_r3));
+		rem=rem+1 if (Action=rel_r3);
 		rem=2 if (Action=relall);
-		idl=false if (Action=req_bed and Environment.bed=none and Environment.bed = none and !(mouse.Action=req_bed));
-		idl=false if (Action=rel_bed);
+		idl=false if (Action=req_r3 and Environment.r3=none and Environment.r3 = none and !(A3.Action=req_r3));
+		idl=false if (Action=rel_r3);
 		idl=false if (Action=relall);
 		idl=true if (Action=idle);
 	end Evolution
 end Agent
 
-Agent mouse
-	Lobsvars = {bed,rem_dog,rem_cat};
+Agent A3
+	Lobsvars = {r3,rem_A3,rem_A1};
 	Vars:
 		rem : 0..1;
 		idl : boolean;
 	end Vars
-	Actions = {req_bed,rel_bed,relall,idle};
+	Actions = {req_r3,rel_r3,relall,idle};
 	Protocol:
 		rem = 0 : {relall};
 		rem > 0 : {idle};
-		rem > 0 and Environment.bed=none : {req_bed};
-		rem > 0 and Environment.bed=mouse : {rel_bed};
+		rem > 0 and Environment.r3=none : {req_r3};
+		rem > 0 and Environment.r3=A3 : {rel_r3};
 	end Protocol
 	Evolution:
-		rem=rem-1 if (Action=req_bed and Environment.bed=none and Environment.bed = none and !(dog.Action=req_bed));
-		rem=rem+1 if (Action=rel_bed);
+		rem=rem-1 if (Action=req_r3 and Environment.r3=none and Environment.r3 = none and !(A2.Action=req_r3));
+		rem=rem+1 if (Action=rel_r3);
 		rem=1 if (Action=relall);
-		idl=false if (Action=req_bed and Environment.bed=none and Environment.bed = none and !(dog.Action=req_bed));
-		idl=false if (Action=rel_bed);
+		idl=false if (Action=req_r3 and Environment.r3=none and Environment.r3 = none and !(A2.Action=req_r3));
+		idl=false if (Action=rel_r3);
 		idl=false if (Action=relall);
 		idl=true if (Action=idle);
 	end Evolution
 end Agent
 
 Evaluation
-	cat_eat if (cat.rem=0);
-	dog_eat if (dog.rem=0);
-	mouse_eat if (mouse.rem=0);
-	not_idle_cat if (cat.idl=false);
-	not_idle_dog if (dog.idl=false);
-	not_idle_mouse if (mouse.idl=false);
+	A1_eat if (A1.rem=0);
+	A2_eat if (A2.rem=0);
+	A3_eat if (A3.rem=0);
+	not_idle_A1 if (A1.idl=false);
+	not_idle_A2 if (A2.idl=false);
+	not_idle_A3 if (A3.idl=false);
 end Evaluation
 
 InitStates
-	Environment.bed=none and
-	Environment.bowl=none and
-	Environment.garden=none and
-	Environment.rem_dog=2 and
-	Environment.rem_cat=2 and
-	cat.rem=2 and
-	mouse.rem=1;
+	Environment.r1=none and
+	Environment.r2=none and
+	Environment.r3=none and
+	Environment.rem_A3=1 and
+	Environment.rem_A1=2 and
+	A2.rem=2 and
+	A3.rem=1;
 end InitStates
 
 Groups
-	cat__mouse = {dog, mouse, cat};
-	cat_mouse_dog = {dog, mouse, cat};
-	mouse = {mouse};
+	A1_A2_A3 = {A3, A2, A1};
+	A1__A3 = {A3, A2, A1};
+	EXA1_A3 = {A2};
 end Groups
 
 Fairness
-	not_idle_cat;
-	not_idle_dog;
-	not_idle_mouse;
+	not_idle_A1;
+	not_idle_A2;
+	not_idle_A3;
 end Fairness
 
 Formulae
-	(<cat_mouse_dog>F dog_eat) and (<cat_mouse_dog>F mouse_eat) and (<cat_mouse_dog>F cat_eat);
-	<cat__mouse>G ((<cat__mouse>F dog_eat) and (<cat__mouse>F mouse_eat) and (<cat__mouse>F cat_eat));
-	<mouse>G (!cat_eat and !dog_eat);
+	(<A1_A2_A3>F A3_eat) and (<A1_A2_A3>F A2_eat) and (<A1_A2_A3>F A1_eat);
+	<A1__A3>G ((<A1__A3>F A3_eat) and (<A1__A3>F A2_eat) and (<A1__A3>F A1_eat));
+	<EXA1_A3>G (!A1_eat and !A3_eat);
 end Formulae
 
