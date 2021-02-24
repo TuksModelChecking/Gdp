@@ -1,24 +1,29 @@
-num_agents: 3
-num_resources: 3
-A1:
+agents: # explicitly enumerate or just give amount, then assume we are using standard notation system
+  - dog
+  - cat
+  - mouse
+resources:
+  - bowl
+  - garden
+  - bed
+cat:
   demand: 2
   access:
-    - r1
-    - r2
-A2:
+    - bowl
+    - garden
+dog:
   demand: 2
   access:
-    - r1
-    - r2
-    - r3
-A3:
+    - bowl
+    - garden
+    - bed
+mouse:
   demand: 1
   access:
-    - r3
-observable: <A1A3> ## modify observable to also have on off flag? e.x. -on <all>
+    - bed
+observable: <cat_dog>
 fairness: -on
 formulae:
-  - <A1> achieve
-  - <exA2> live
-  - <A1A2> prevent
-  - <A2> prevent
+  - <cat_mouse_dog> achieve
+  - <cat__mouse> live
+  - <mouse> prevent
