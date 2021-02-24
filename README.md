@@ -6,7 +6,7 @@ A tool that converts shorthand GDP input into an explicilty defined input file f
 
 ### Required
 * MCAMS
-  *
+  * place link here
 * python3
   * windows/mac (https://www.python.org/downloads/release/python-381/)
   * linux $ sudo apt-get install python3.6 (https://docs.python-guide.org/starting/install3/linux/)
