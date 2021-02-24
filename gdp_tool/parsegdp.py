@@ -132,15 +132,15 @@ if len(argv) < 2:
     print("You can specify a file when running the script, like this:")
     print("\t$ python3 parsegdp.py 5phil.yaml")
     print("\tor more generally:")
-    print("\t$ python3 parsegdp.py <relative_file_path>/<filename>.<yaml/txt>")
+    print("\t$ python3 parsegdp.py <filename>.<yaml/txt>")
     print("\tyou may omit the file extension; making your command of the form:")
-    print("\t$ python3 parsegdp.py <relative_file_path>/<filename>")
-    filename = input("\nSpecify a file now: ")
+    print("\t$ python3 parsegdp.py <filename>")
+    filename = input("\nSpecify a file in gdp_files now: ")
 else:
     filename = argv[1]
 if filename.endswith((".txt",".yaml")):
     try:
-        gdp_file = open(filename, "r")
+        gdp_file = open("gdp_files/" + filename, "r")
         print(f"Opening file '{filename}'...")
     except IOError:
         print(f"Tried and failed to open '{filename}'")
@@ -149,12 +149,12 @@ if filename.endswith((".txt",".yaml")):
 else:
     print(f"Guessing file extension...")
     try:
-        gdp_file = open(filename + ".yaml", "r" )
+        gdp_file = open("gdp_files/" + filename + ".yaml", "r" )
         print(f"Opening file '{filename}.yaml'...")
     except IOError:
         print(f"Tried and failed to open '{filename}.yaml'")
         try: 
-            gdpl_file = open(filename + ".txt", "r")
+            gdpl_file = open("gdp_files/" + filename + ".txt", "r")
             print(f"Opening file '{filename}.txt'...")
         except IOError:
             print(f"Tried and failed to open '{filename}.txt'")
@@ -170,7 +170,8 @@ OBSERVABLE = explicit_agent_set(
     gdp["observable"].strip()[1:-1]
 )
 
-ispl_file = open("out.ispl", "w")
+f_name = filename.split('.')[0]
+ispl_file = open(f"ispl_files/{f_name}.ispl", "w")
 tw = TabTrackingWriter(ispl_file)
 
 tw.write("Semantics=SingleAssignment;\n")
@@ -288,4 +289,4 @@ for f in gdp["formulae"]:
 tw.untab_write("end Formulae\n")
 
 tw.__del__()
-print("done, 'out.ispl' created")
+print(f"done, '{filename}.ispl' created")
