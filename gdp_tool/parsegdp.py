@@ -1,5 +1,6 @@
 from sys import argv
 from yaml import load
+import click
 
 class TabTrackingWriter:
     def __init__(self, ispl_file):
@@ -124,169 +125,193 @@ def generate_ispl_formula(formula):
     else:
         return formula
 
-# ============================================================================
+# === CLI ===========================================================
+# ===================================================================
+@click.command()
+@click.option('--gdp-file', '-gdp', help="The GDP file to convert to ISPL.")
+@click.option('--ispl-file', '-ispl', help="Name to give output ISPL file.")
+@click.option('--template', '-t', default="template", help="Generate a template GDP file.")
+@click.option('--fair/--nofair', '-f/-nf', default=False, help='Add fairness constraint. Default: -nf')
+@click.option('--obs/--no-obs', '-o/-no', default=False, help="Make demand vars observable. Default: -no")
+@click.option('--random', '-r', default=("2..4;2..4;1..4", "random.txt"), help="Generate a random GDP model based on the specified num_agents;num_resources;agent_demand. Each paramater can be an int or an int range. EXAMPLE: -r 3;2..4;1..4 gdp.txt")
 
-
-if len(argv) < 2:
-    print("No GDP file specified")
-    print("You can specify a file when running the script, like this:")
-    print("\t$ python3 parsegdp.py 5phil.yaml")
-    print("\tor more generally:")
-    print("\t$ python3 parsegdp.py <filename>.<yaml/txt>")
-    print("\tyou may omit the file extension; making your command of the form:")
-    print("\t$ python3 parsegdp.py <filename>")
-    filename = input("\nSpecify a file in gdp_files now: ")
-else:
-    filename = argv[1]
-if filename.endswith((".txt",".yaml")):
-    try:
-        gdp_file = open("gdp_files/" + filename, "r")
-        print(f"Opening file '{filename}'...")
-    except IOError:
-        print(f"Tried and failed to open '{filename}'")
-        print("Are you sure the filename and relative path is correct?")
-        exit()
-else:
-    print(f"Guessing file extension...")
-    try:
-        gdp_file = open("gdp_files/" + filename + ".yaml", "r" )
-        print(f"Opening file '{filename}.yaml'...")
-    except IOError:
-        print(f"Tried and failed to open '{filename}.yaml'")
-        try: 
-            gdpl_file = open("gdp_files/" + filename + ".txt", "r")
-            print(f"Opening file '{filename}.txt'...")
-        except IOError:
-            print(f"Tried and failed to open '{filename}.txt'")
-            print("Are you sure the filename and relative path is correct?")
-            exit()        
-gdp = load(gdp_file)
-print("Parsing model to ISPL...")
-AGENTS = sorted(gdp["agents"])
-RESOURCES = sorted(gdp["resources"])
-NUM_AGENTS = len(AGENTS)
-NUM_RESOURCES = len(RESOURCES)
-OBSERVABLE = explicit_agent_set(
-    gdp["observable"].strip()[1:-1]
-)
-
-f_name = filename.split('.')[0]
-ispl_file = open(f"ispl_files/{f_name}.ispl", "w")
-tw = TabTrackingWriter(ispl_file)
-
-tw.write("Semantics=SingleAssignment;\n")
-
-tw.write_tab("Agent Environment")
-tw.write_tab("Vars:")
-for r in RESOURCES:
-    valid_vars = "{none,"
-    for a in AGENTS:
-        if r in gdp[a]["access"]:
-            valid_vars += f"{a},"
-    valid_vars = valid_vars[:-1] + "}"
-    tw.write(f"{r}: {valid_vars};")
-for a in OBSERVABLE:
-    demand = gdp[a]["demand"]
-    tw.write(f"rem_{a} : 0..{demand};")
-tw.untab_write("end Vars")
-tw.write("Actions = {none};\n\tProtocol:\n\t\tOther: {none};\n\tend Protocol")
-tw.write_tab("Evolution:")
-for r in RESOURCES:
-    for a in AGENTS:
-        if r in gdp[a]["access"]:
-            tw.write(f"{r}={a} if ({take_condition(r, a, gdp)});")
-            tw.write(f"{r}=none if ({r}={a} and {a}.Action=rel_{r});")
-            tw.write(f"{r}=none if ({r}={a} and {a}.Action=relall);")
-            if a in OBSERVABLE:
-                tw.write(f"rem_{a}=rem_{a}-1 if ({take_condition(r, a, gdp)});")
-                tw.write(f"rem_{a}=rem_{a}+1 if ({r}={a} and {a}.Action=rel_{r});")
-                tw.write(f"rem_{a}={gdp[a]['demand']} if ({r}={a} and {a}.Action=relall);")
-        
-tw.untab_write("end Evolution")
-tw.untab_write("end Agent\n")
-
-for agent in AGENTS:
-    agent
-    tw.write_tab(f"Agent {agent}")
-    actions = "{"
-    lobsvars = "{"
-    for r in gdp[agent]["access"]:
-        actions += f"req_{r},"
-        actions += f"rel_{r},"
-        lobsvars += r
-        lobsvars += ","
-    for a in OBSERVABLE:
-        lobsvars += f"rem_{a},"
-    if len(lobsvars) == 1:
-        lobsvars = "{none};"
-        actions = "{idle};"
+# === main ==========================================================
+# ===================================================================
+def main(fairness, observable, random_gdp):
+    """
+        A tool that converts a shorthand description of a GDP model to an ISPL file that can be checked using MCMAS.\n
+        USAGE EXAMPLE\n  
+        GDP definition:\n
+            $ python3 parsegdp.py -t model_name.txt    (Then manually define GDP in model_name.txt)\n
+            or\n
+            $ python3 parsegdp.py -r 3..5;7;2..7 model_name.txt    (Generate GDP model with 3 to 5 agents, 7 resources, and (for each agent) a demand within the range [2,7])\n
+        then\n
+        ISPL generation:\n
+            $ python3 parsegdp.py -gdp model_name.txt -o -f -ispl m13.ispl    (Parse model; turn on observability and fairness; output as m13.ispl)\n
+    """
+    if len(argv) < 2:
+        print("No GDP file specified")
+        print("You can specify a file when running the script, like this:")
+        print("\t$ python3 parsegdp.py 5phil.yaml")
+        print("\tor more generally:")
+        print("\t$ python3 parsegdp.py <filename>.<yaml/txt>")
+        print("\tyou may omit the file extension; making your command of the form:")
+        print("\t$ python3 parsegdp.py <filename>")
+        filename = input("\nSpecify a file in gdp_files now: ")
     else:
-        actions = actions[:-1] + ",relall,idle};"
-        lobsvars = lobsvars[:-1] + "};"
-    tw.write(f"Lobsvars = {lobsvars}")
+        filename = argv[1]
+    if filename.endswith((".txt",".yaml")):
+        try:
+            gdp_file = open("gdp_files/" + filename, "r")
+            print(f"Opening file '{filename}'...")
+        except IOError:
+            print(f"Tried and failed to open '{filename}'")
+            print("Are you sure the filename and relative path is correct?")
+            exit()
+    else:
+        print(f"Guessing file extension...")
+        try:
+            gdp_file = open("gdp_files/" + filename + ".yaml", "r" )
+            print(f"Opening file '{filename}.yaml'...")
+        except IOError:
+            print(f"Tried and failed to open '{filename}.yaml'")
+            try: 
+                gdpl_file = open("gdp_files/" + filename + ".txt", "r")
+                print(f"Opening file '{filename}.txt'...")
+            except IOError:
+                print(f"Tried and failed to open '{filename}.txt'")
+                print("Are you sure the filename and relative path is correct?")
+                exit()        
+    gdp = load(gdp_file)
+    print("Parsing model to ISPL...")
+    AGENTS = sorted(gdp["agents"])
+    RESOURCES = sorted(gdp["resources"])
+    NUM_AGENTS = len(AGENTS)
+    NUM_RESOURCES = len(RESOURCES)
+    OBSERVABLE = explicit_agent_set(
+        gdp["observable"].strip()[1:-1]
+    )
+
+    f_name = filename.split('.')[0]
+    ispl_file = open(f"ispl_files/{f_name}.ispl", "w")
+    tw = TabTrackingWriter(ispl_file)
+
+    tw.write("Semantics=SingleAssignment;\n")
+
+    tw.write_tab("Agent Environment")
     tw.write_tab("Vars:")
-    demand = gdp[agent]["demand"]
-    tw.write(f"rem : 0..{demand};")
-    if gdp["fairness"] != None and gdp["fairness"] == "-on":
-        tw.write(f"idl : boolean;")
+    for r in RESOURCES:
+        valid_vars = "{none,"
+        for a in AGENTS:
+            if r in gdp[a]["access"]:
+                valid_vars += f"{a},"
+        valid_vars = valid_vars[:-1] + "}"
+        tw.write(f"{r}: {valid_vars};")
+    for a in OBSERVABLE:
+        demand = gdp[a]["demand"]
+        tw.write(f"rem_{a} : 0..{demand};")
     tw.untab_write("end Vars")
-    tw.write(f"Actions = {actions}")
-    tw.write_tab("Protocol:")
-    tw.write("rem = 0 : {relall};")
-    tw.write("rem > 0 : {idle};")
-    for my_r in gdp[agent]["access"]:
-        req = "{req_" + my_r + "}"
-        rel = "{rel_" + my_r + "}"
-        tw.write(f"rem > 0 and Environment.{my_r}=none : {req};")
-        tw.write(f"rem > 0 and Environment.{my_r}={agent} : {rel};")
-    tw.untab_write("end Protocol")
+    tw.write("Actions = {none};\n\tProtocol:\n\t\tOther: {none};\n\tend Protocol")
     tw.write_tab("Evolution:")
-    for my_r in gdp[agent]["access"]:
-        onr = others_not_requesting(my_r, agent, gdp)
-        tw.write(f"rem=rem-1 if (Action=req_{my_r} and Environment.{my_r}=none and {onr});")
-        tw.write(f"rem=rem+1 if (Action=rel_{my_r});")
-        tw.write(f"rem={gdp[agent]['demand']} if (Action=relall);")
-        if gdp["fairness"] != None and gdp["fairness"] == "-on":
-            tw.write(f"idl=false if (Action=req_{my_r} and Environment.{my_r}=none and {onr});")
-            tw.write(f"idl=false if (Action=rel_{my_r});")
-            tw.write(f"idl=false if (Action=relall);")
-            tw.write(f"idl=true if (Action=idle);")
+    for r in RESOURCES:
+        for a in AGENTS:
+            if r in gdp[a]["access"]:
+                tw.write(f"{r}={a} if ({take_condition(r, a, gdp)});")
+                tw.write(f"{r}=none if ({r}={a} and {a}.Action=rel_{r});")
+                tw.write(f"{r}=none if ({r}={a} and {a}.Action=relall);")
+                if a in OBSERVABLE:
+                    tw.write(f"rem_{a}=rem_{a}-1 if ({take_condition(r, a, gdp)});")
+                    tw.write(f"rem_{a}=rem_{a}+1 if ({r}={a} and {a}.Action=rel_{r});")
+                    tw.write(f"rem_{a}={gdp[a]['demand']} if ({r}={a} and {a}.Action=relall);")
+            
     tw.untab_write("end Evolution")
-    tw.untab_write(f"end Agent\n")
+    tw.untab_write("end Agent\n")
 
-tw.write_tab("Evaluation")
-for a in AGENTS:
-    tw.write(f"{a}_eat if ({a}.rem=0);")
-if gdp["fairness"] != None and gdp["fairness"] == "-on":
+    for agent in AGENTS:
+        agent
+        tw.write_tab(f"Agent {agent}")
+        actions = "{"
+        lobsvars = "{"
+        for r in gdp[agent]["access"]:
+            actions += f"req_{r},"
+            actions += f"rel_{r},"
+            lobsvars += r
+            lobsvars += ","
+        for a in OBSERVABLE:
+            lobsvars += f"rem_{a},"
+        if len(lobsvars) == 1:
+            lobsvars = "{none};"
+            actions = "{idle};"
+        else:
+            actions = actions[:-1] + ",relall,idle};"
+            lobsvars = lobsvars[:-1] + "};"
+        tw.write(f"Lobsvars = {lobsvars}")
+        tw.write_tab("Vars:")
+        demand = gdp[agent]["demand"]
+        tw.write(f"rem : 0..{demand};")
+        if gdp["fairness"] != None and gdp["fairness"] == "-on":
+            tw.write(f"idl : boolean;")
+        tw.untab_write("end Vars")
+        tw.write(f"Actions = {actions}")
+        tw.write_tab("Protocol:")
+        tw.write("rem = 0 : {relall};")
+        tw.write("rem > 0 : {idle};")
+        for my_r in gdp[agent]["access"]:
+            req = "{req_" + my_r + "}"
+            rel = "{rel_" + my_r + "}"
+            tw.write(f"rem > 0 and Environment.{my_r}=none : {req};")
+            tw.write(f"rem > 0 and Environment.{my_r}={agent} : {rel};")
+        tw.untab_write("end Protocol")
+        tw.write_tab("Evolution:")
+        for my_r in gdp[agent]["access"]:
+            onr = others_not_requesting(my_r, agent, gdp)
+            tw.write(f"rem=rem-1 if (Action=req_{my_r} and Environment.{my_r}=none and {onr});")
+            tw.write(f"rem=rem+1 if (Action=rel_{my_r});")
+            tw.write(f"rem={gdp[agent]['demand']} if (Action=relall);")
+            if gdp["fairness"] != None and gdp["fairness"] == "-on":
+                tw.write(f"idl=false if (Action=req_{my_r} and Environment.{my_r}=none and {onr});")
+                tw.write(f"idl=false if (Action=rel_{my_r});")
+                tw.write(f"idl=false if (Action=relall);")
+                tw.write(f"idl=true if (Action=idle);")
+        tw.untab_write("end Evolution")
+        tw.untab_write(f"end Agent\n")
+
+    tw.write_tab("Evaluation")
     for a in AGENTS:
-        tw.write(f"not_idle_{a} if ({a}.idl=false);")
-tw.untab_write("end Evaluation\n")
+        tw.write(f"{a}_eat if ({a}.rem=0);")
+    if gdp["fairness"] != None and gdp["fairness"] == "-on":
+        for a in AGENTS:
+            tw.write(f"not_idle_{a} if ({a}.idl=false);")
+    tw.untab_write("end Evaluation\n")
 
-tw.write_tab("InitStates")
-for r in RESOURCES:
-    tw.write(f"Environment.{r}=none and")
-for a in OBSERVABLE:
-    tw.write(f"Environment.rem_{a}={gdp[a]['demand']} and")
-for i in range(1, NUM_AGENTS-1):
-    tw.write(f"{AGENTS[i]}.rem={gdp[AGENTS[i]]['demand']} and")
-tw.write(f"{AGENTS[NUM_AGENTS-1]}.rem={gdp[AGENTS[NUM_AGENTS-1]]['demand']};")
-tw.untab_write("end InitStates\n")
+    tw.write_tab("InitStates")
+    for r in RESOURCES:
+        tw.write(f"Environment.{r}=none and")
+    for a in OBSERVABLE:
+        tw.write(f"Environment.rem_{a}={gdp[a]['demand']} and")
+    for i in range(1, NUM_AGENTS-1):
+        tw.write(f"{AGENTS[i]}.rem={gdp[AGENTS[i]]['demand']} and")
+    tw.write(f"{AGENTS[NUM_AGENTS-1]}.rem={gdp[AGENTS[NUM_AGENTS-1]]['demand']};")
+    tw.untab_write("end InitStates\n")
 
-tw.write_tab("Groups")
-for g in groups_to_ispl(deduce_groups_from(gdp["formulae"])):
-    tw.write(g)
-tw.untab_write("end Groups\n")
+    tw.write_tab("Groups")
+    for g in groups_to_ispl(deduce_groups_from(gdp["formulae"])):
+        tw.write(g)
+    tw.untab_write("end Groups\n")
 
-tw.write_tab("Fairness")
-if gdp["fairness"] != None and gdp["fairness"] == "-on":
-    for a in AGENTS:
-        tw.write(f"not_idle_{a};")
-tw.untab_write("end Fairness\n")
+    tw.write_tab("Fairness")
+    if gdp["fairness"] != None and gdp["fairness"] == "-on":
+        for a in AGENTS:
+            tw.write(f"not_idle_{a};")
+    tw.untab_write("end Fairness\n")
 
-tw.write_tab("Formulae")
-for f in gdp["formulae"]:
-    tw.write(generate_ispl_formula(f))
-tw.untab_write("end Formulae\n")
+    tw.write_tab("Formulae")
+    for f in gdp["formulae"]:
+        tw.write(generate_ispl_formula(f))
+    tw.untab_write("end Formulae\n")
 
-tw.__del__()
-print(f"done, '{filename}.ispl' created")
+    tw.__del__()
+    print(f"done, '{filename}.ispl' created")
+
+if __name__ == '__main__':
+    main()
