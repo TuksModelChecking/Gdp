@@ -1,0 +1,206 @@
+Semantics = SingleAssignment;
+
+Agent Environment
+	Vars:
+		bed: {none,cat,dog};
+		food: {none,cat,dog};
+		fuel: {none,car,cat};
+		rem_cat : 0..2;
+		rem_car : 0..1;
+	end Vars
+	Actions = {none};
+	Protocol:
+		Other: {none};
+	end Protocol
+	Evolution:
+		bed = cat if (bed=none and cat.Action=req_bed and !(dog.Action=req_bed));
+		bed = none if (bed = cat and cat.Action = rel_bed);
+		bed = none if (bed = cat and cat.Action = relall);
+
+		rem_cat = rem_cat - 1 if (bed=none and cat.Action=req_bed and !(dog.Action=req_bed));
+		rem_cat = rem_cat + 1 if (bed = cat and cat.Action = rel_bed);
+		rem_cat = 2 if (bed = cat and cat.Action = relall);
+
+		bed = dog if (bed=none and dog.Action=req_bed and !(cat.Action=req_bed));
+		bed = none if (bed = dog and dog.Action = rel_bed);
+		bed = none if (bed = dog and dog.Action = relall);
+
+		food = cat if (food=none and cat.Action=req_food and !(dog.Action=req_food));
+		food = none if (food = cat and cat.Action = rel_food);
+		food = none if (food = cat and cat.Action = relall);
+
+		rem_cat = rem_cat - 1 if (food=none and cat.Action=req_food and !(dog.Action=req_food));
+		rem_cat = rem_cat + 1 if (food = cat and cat.Action = rel_food);
+		rem_cat = 2 if (food = cat and cat.Action = relall);
+
+		food = dog if (food=none and dog.Action=req_food and !(cat.Action=req_food));
+		food = none if (food = dog and dog.Action = rel_food);
+		food = none if (food = dog and dog.Action = relall);
+
+		fuel = car if (fuel=none and car.Action=req_fuel and !(cat.Action=req_fuel));
+		fuel = none if (fuel = car and car.Action = rel_fuel);
+		fuel = none if (fuel = car and car.Action = relall);
+
+		rem_car = rem_car - 1 if (fuel=none and car.Action=req_fuel and !(cat.Action=req_fuel));
+		rem_car = rem_car + 1 if (fuel = car and car.Action = rel_fuel);
+		rem_car = 1 if (fuel = car and car.Action = relall);
+
+		fuel = cat if (fuel=none and cat.Action=req_fuel and !(car.Action=req_fuel));
+		fuel = none if (fuel = cat and cat.Action = rel_fuel);
+		fuel = none if (fuel = cat and cat.Action = relall);
+
+		rem_cat = rem_cat - 1 if (fuel=none and cat.Action=req_fuel and !(car.Action=req_fuel));
+		rem_cat = rem_cat + 1 if (fuel = cat and cat.Action = rel_fuel);
+		rem_cat = 2 if (fuel = cat and cat.Action = relall);
+
+	end Evolution
+end Agent
+
+Agent car
+	Lobsvars = {fuel,rem_cat,rem_car};
+	Vars:
+		rem : 0..1;
+		idl : boolean;
+	end Vars
+	Actions = {req_fuel,rel_fuel,relall,idle};
+	Protocol:
+		rem = 0 : {relall};
+		rem > 0 : {idle};
+		rem > 0 and Environment.fuel = none : {req_fuel};
+		rem > 0 and Environment.fuel = car : {rel_fuel};
+	end Protocol
+	Evolution:
+		rem = rem - 1 if (Action = req_fuel and Environment.fuel = none and Environment.fuel = none and !(cat.Action=req_fuel));
+		rem = rem + 1 if (Action = rel_fuel);
+		rem = 1 if (Action = relall);
+
+		idl = false if (Action = req_fuel and Environment.fuel = none and Environment.fuel = none and !(cat.Action=req_fuel));
+		idl = false if (Action = rel_fuel);
+		idl = false if (Action = relall);
+		idl = true if (Action = idle);
+
+	end Evolution
+end Agent
+
+Agent cat
+	Lobsvars = {food,fuel,bed,rem_cat,rem_car};
+	Vars:
+		rem : 0..2;
+		idl : boolean;
+	end Vars
+	Actions = {req_food,rel_food,req_fuel,rel_fuel,req_bed,rel_bed,relall,idle};
+	Protocol:
+		rem = 0 : {relall};
+		rem > 0 : {idle};
+		rem > 0 and Environment.food = none : {req_food};
+		rem > 0 and Environment.food = cat : {rel_food};
+		rem > 0 and Environment.fuel = none : {req_fuel};
+		rem > 0 and Environment.fuel = cat : {rel_fuel};
+		rem > 0 and Environment.bed = none : {req_bed};
+		rem > 0 and Environment.bed = cat : {rel_bed};
+	end Protocol
+	Evolution:
+		rem = rem - 1 if (Action = req_food and Environment.food = none and Environment.food = none and !(dog.Action=req_food));
+		rem = rem + 1 if (Action = rel_food);
+		rem = 2 if (Action = relall);
+
+		idl = false if (Action = req_food and Environment.food = none and Environment.food = none and !(dog.Action=req_food));
+		idl = false if (Action = rel_food);
+		idl = false if (Action = relall);
+		idl = true if (Action = idle);
+
+		rem = rem - 1 if (Action = req_fuel and Environment.fuel = none and Environment.fuel = none and !(car.Action=req_fuel));
+		rem = rem + 1 if (Action = rel_fuel);
+		rem = 2 if (Action = relall);
+
+		idl = false if (Action = req_fuel and Environment.fuel = none and Environment.fuel = none and !(car.Action=req_fuel));
+		idl = false if (Action = rel_fuel);
+		idl = false if (Action = relall);
+		idl = true if (Action = idle);
+
+		rem = rem - 1 if (Action = req_bed and Environment.bed = none and Environment.bed = none and !(dog.Action=req_bed));
+		rem = rem + 1 if (Action = rel_bed);
+		rem = 2 if (Action = relall);
+
+		idl = false if (Action = req_bed and Environment.bed = none and Environment.bed = none and !(dog.Action=req_bed));
+		idl = false if (Action = rel_bed);
+		idl = false if (Action = relall);
+		idl = true if (Action = idle);
+
+	end Evolution
+end Agent
+
+Agent dog
+	Lobsvars = {bed,food,rem_cat,rem_car};
+	Vars:
+		rem : 0..2;
+		idl : boolean;
+	end Vars
+	Actions = {req_bed,rel_bed,req_food,rel_food,relall,idle};
+	Protocol:
+		rem = 0 : {relall};
+		rem > 0 : {idle};
+		rem > 0 and Environment.bed = none : {req_bed};
+		rem > 0 and Environment.bed = dog : {rel_bed};
+		rem > 0 and Environment.food = none : {req_food};
+		rem > 0 and Environment.food = dog : {rel_food};
+	end Protocol
+	Evolution:
+		rem = rem - 1 if (Action = req_bed and Environment.bed = none and Environment.bed = none and !(cat.Action=req_bed));
+		rem = rem + 1 if (Action = rel_bed);
+		rem = 2 if (Action = relall);
+
+		idl = false if (Action = req_bed and Environment.bed = none and Environment.bed = none and !(cat.Action=req_bed));
+		idl = false if (Action = rel_bed);
+		idl = false if (Action = relall);
+		idl = true if (Action = idle);
+
+		rem = rem - 1 if (Action = req_food and Environment.food = none and Environment.food = none and !(cat.Action=req_food));
+		rem = rem + 1 if (Action = rel_food);
+		rem = 2 if (Action = relall);
+
+		idl = false if (Action = req_food and Environment.food = none and Environment.food = none and !(cat.Action=req_food));
+		idl = false if (Action = rel_food);
+		idl = false if (Action = relall);
+		idl = true if (Action = idle);
+
+	end Evolution
+end Agent
+
+Evaluation
+	car_eat if (car.rem = 0);
+	cat_eat if (cat.rem = 0);
+	dog_eat if (dog.rem = 0);
+	not_idle_car if (car.idl = false);
+	not_idle_cat if (cat.idl = false);
+	not_idle_dog if (dog.idl = false);
+end Evaluation
+
+InitStates
+	Environment.bed = none and
+	Environment.food = none and
+	Environment.fuel = none and
+	Environment.rem_cat = 2 and
+	Environment.rem_car = 1 and
+	cat.rem = 2 and
+	dog.rem = 2;
+end InitStates
+
+Groups
+	dog_cat_car = {dog, car, cat};
+	EXcar = {dog, cat};
+	car__dog = {cat, dog, car};
+end Groups
+
+Fairness
+	not_idle_car;
+	not_idle_cat;
+	not_idle_dog;
+end Fairness
+
+Formulae
+	(<dog_cat_car>F dog_eat) and (<dog_cat_car>F car_eat) and (<dog_cat_car>F cat_eat);
+	<car__dog>G ((<car__dog>F cat_eat) and (<car__dog>F dog_eat) and (<car__dog>F car_eat));
+	<EXcar>G (!car_eat);
+end Formulae
+
