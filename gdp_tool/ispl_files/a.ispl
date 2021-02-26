@@ -1,0 +1,118 @@
+Semantics = SingleAssignment;
+
+Agent Environment
+	Vars:
+		r1: {none,a1,a2};
+		r2: {none,a2};
+		r3: {none,a2};
+		r4: {none,a1};
+	end Vars
+	Actions = {none};
+	Protocol:
+		Other: {none};
+	end Protocol
+	Evolution:
+		r1 = a1 if (r1=none and a1.Action=req_r1 and !(a2.Action=req_r1));
+		r1 = none if (r1 = a1 and a1.Action = rel_r1);
+		r1 = none if (r1 = a1 and a1.Action = relall);
+
+		r1 = a2 if (r1=none and a2.Action=req_r1 and !(a1.Action=req_r1));
+		r1 = none if (r1 = a2 and a2.Action = rel_r1);
+		r1 = none if (r1 = a2 and a2.Action = relall);
+
+		r2 = a2 if (r2=none and a2.Action=req_r2);
+		r2 = none if (r2 = a2 and a2.Action = rel_r2);
+		r2 = none if (r2 = a2 and a2.Action = relall);
+
+		r3 = a2 if (r3=none and a2.Action=req_r3);
+		r3 = none if (r3 = a2 and a2.Action = rel_r3);
+		r3 = none if (r3 = a2 and a2.Action = relall);
+
+		r4 = a1 if (r4=none and a1.Action=req_r4);
+		r4 = none if (r4 = a1 and a1.Action = rel_r4);
+		r4 = none if (r4 = a1 and a1.Action = relall);
+
+	end Evolution
+end Agent
+
+Agent a1
+	Lobsvars = {r1,r4};
+	Vars:
+		rem : 0..1;
+	end Vars
+	Actions = {req_r1,rel_r1,req_r4,rel_r4,relall,idle};
+	Protocol:
+		rem = 0 : {relall};
+		rem > 0 : {idle};
+		rem > 0 and Environment.r1 = none : {req_r1};
+		rem > 0 and Environment.r1 = a1 : {rel_r1};
+		rem > 0 and Environment.r4 = none : {req_r4};
+		rem > 0 and Environment.r4 = a1 : {rel_r4};
+	end Protocol
+	Evolution:
+		rem = rem - 1 if (Action = req_r1 and Environment.r1 = none and Environment.r1 = none and !(a2.Action=req_r1));
+		rem = rem + 1 if (Action = rel_r1);
+		rem = 1 if (Action = relall);
+
+		rem = rem - 1 if (Action = req_r4 and Environment.r4 = none and Environment.r4 = none);
+		rem = rem + 1 if (Action = rel_r4);
+		rem = 1 if (Action = relall);
+
+	end Evolution
+end Agent
+
+Agent a2
+	Lobsvars = {r1,r2,r3};
+	Vars:
+		rem : 0..3;
+	end Vars
+	Actions = {req_r1,rel_r1,req_r2,rel_r2,req_r3,rel_r3,relall,idle};
+	Protocol:
+		rem = 0 : {relall};
+		rem > 0 : {idle};
+		rem > 0 and Environment.r1 = none : {req_r1};
+		rem > 0 and Environment.r1 = a2 : {rel_r1};
+		rem > 0 and Environment.r2 = none : {req_r2};
+		rem > 0 and Environment.r2 = a2 : {rel_r2};
+		rem > 0 and Environment.r3 = none : {req_r3};
+		rem > 0 and Environment.r3 = a2 : {rel_r3};
+	end Protocol
+	Evolution:
+		rem = rem - 1 if (Action = req_r1 and Environment.r1 = none and Environment.r1 = none and !(a1.Action=req_r1));
+		rem = rem + 1 if (Action = rel_r1);
+		rem = 3 if (Action = relall);
+
+		rem = rem - 1 if (Action = req_r2 and Environment.r2 = none and Environment.r2 = none);
+		rem = rem + 1 if (Action = rel_r2);
+		rem = 3 if (Action = relall);
+
+		rem = rem - 1 if (Action = req_r3 and Environment.r3 = none and Environment.r3 = none);
+		rem = rem + 1 if (Action = rel_r3);
+		rem = 3 if (Action = relall);
+
+	end Evolution
+end Agent
+
+Evaluation
+	a1_eat if (a1.rem = 0);
+	a2_eat if (a2.rem = 0);
+end Evaluation
+
+InitStates
+	Environment.r1 = none and
+	Environment.r2 = none and
+	Environment.r3 = none and
+	Environment.r4 = none and
+	a2.rem = 3;
+end InitStates
+
+Groups
+	a2 = {a2};
+	a1 = {a1};
+end Groups
+
+Formulae
+	<a1>G (!a2_eat);
+	<a2>G ((<a2>F a2_eat));
+end Formulae
+

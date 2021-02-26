@@ -1,0 +1,26 @@
+a1:
+  access:
+  - []
+  demand: 1
+a2:
+  access:
+  - []
+  demand: 1
+a3:
+  access:
+  - []
+  demand: 1
+a4:
+  access:
+  - []
+  demand: 1
+a5:
+  access:
+  - []
+  demand: 1
+fairness: false
+formulae: [<all> live]
+observable: <none>
+
+# USAGE GUIDE ===============
+# ===========================

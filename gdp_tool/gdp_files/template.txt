@@ -1,0 +1,22 @@
+a1:
+  access:
+  - [r5, r7, r4, r1, r2, r3, r6]
+  demand: 2
+a2:
+  access:
+  - [r5, r7, r4, r1, r3, r6]
+  demand: 6
+a3:
+  access:
+  - [r4]
+  demand: 1
+a4:
+  access:
+  - [r3, r4, r1]
+  demand: 2
+fairness: false
+formulae: [<all> live]
+observable: <none>
+
+# USAGE GUIDE ===============
+# ===========================

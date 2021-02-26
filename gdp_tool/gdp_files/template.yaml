@@ -1,43 +1,9 @@
-agents:
-  - A1
-resources:
-  - 
-A1:
+a1:
+  access: [r1, r4]
   demand: 1
-  access:
-    - 
+a2:
+  access: [r1, r2, r3]
+  demand: 3
+fairness: false
+formulae: [<a1> prevent, <a2> live]
 observable: <none>
-fairness: -off
-formulae:
-  - 
-
-#========== Example ============
-# agents:
-#   - A1
-#   - A2
-#   - A3
-# resources:
-#   - r1
-#   - r2
-#   - r3
-# A1:
-#   demand: 2
-#   access:
-#     - r1
-#     - r2
-# A2:
-#   demand: 2
-#   access:
-#     - r1
-#     - r2
-#     - r3
-# A3:
-#   demand: 1
-#   access:
-#     - r3
-# observable: <A1_A3>
-# fairness: -on
-# formulae:
-#   - <A1_A2_A3> achieve
-#   - <A1__A3> live
-#   - <EXA1_A3> prevent

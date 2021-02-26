@@ -1,29 +1,21 @@
-agents:
-  - a1
-  - a2
-  - a3
-resources:
-  - r1
-  - r2
-  - r3
-a1:
+dog:
   demand: 2
   access:
-    - r1
-    - r2
-a2:
+    - bed
+    - food
+cat:
   demand: 2
   access:
-    - r1
-    - r2
-    - r3
-a3:
+    - food
+    - fuel
+    - bed
+car:
   demand: 1
   access:
-    - r1
-observable: <a1__a3>
-fairness: -on
+    - fuel
+fairness: True
 formulae:
-  - <a1_a3_a2> achieve
-  - <a1__a3> live
-  - <EXa2_a3> prevent
+  - <dog_cat_car> achieve
+  - <car__dog> live
+  - <EXcar> prevent
+observable: <car_cat>
