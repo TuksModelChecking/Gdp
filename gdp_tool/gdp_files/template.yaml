@@ -1,9 +1,0 @@
-a1:
-  access: [r1, r4]
-  demand: 1
-a2:
-  access: [r1, r2, r3]
-  demand: 3
-fairness: false
-formulae: [<a1> prevent, <a2> live]
-observable: <none>
