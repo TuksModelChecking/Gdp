@@ -1,10 +1,11 @@
 from sys import argv
 from yaml import load
 from yaml import dump
+from yaml import SafeLoader
 import click
 from random import randrange
 
-class GDPParser:
+class ISPLGenerator:
     def __init__(self, gdp, ispl_file, fair, obs):
         self.tab_depth = 0
         self.gdp = gdp
@@ -170,10 +171,10 @@ class GDPParser:
         self.tab_depth -= 1
         self.write(string)
 
-    def write_ispl_single_assignment(self):
+    def w_single_assignment(self):
         self.write("Semantics = SingleAssignment;\n")
 
-    def write_ispl_environment(self):
+    def w_environment(self):
         self.write_tab("Agent Environment")
         self.write_tab("Vars:")
         for r in self.resources:
@@ -202,7 +203,7 @@ class GDPParser:
         self.untab_write("end Evolution")
         self.untab_write("end Agent\n")
     
-    def write_ispl_agents(self):
+    def w_agents(self):
         for agent in self.agent_index:
             agent
             self.write_tab(f"Agent {agent}")
@@ -252,7 +253,7 @@ class GDPParser:
             self.untab_write("end Evolution")
             self.untab_write(f"end Agent\n")
 
-    def write_ispl_evaluation(self):
+    def w_evaluation(self):
         self.write_tab("Evaluation")
         for a in self.agent_index:
             self.write(f"{a}_eat if ({a}.rem = 0);")
@@ -261,7 +262,7 @@ class GDPParser:
                 self.write(f"not_idle_{a} if ({a}.idl = false);")
         self.untab_write("end Evaluation\n")
 
-    def write_ispl_init_states(self):
+    def w_init_states(self):
         self.write_tab("InitStates")
         for r in self.resources:
             self.write(f"Environment.{r} = none and")
@@ -272,20 +273,20 @@ class GDPParser:
         self.write(f"{self.agent_index[self.n_a-1]}.rem = {self.gdp[self.agent_index[self.n_a-1]]['demand']};")
         self.untab_write("end InitStates\n")
 
-    def write_ispl_groups(self):
+    def w_groups(self):
         self.write_tab("Groups")
         for g in self.__groups_to_ispl(self.__deduce_groups_from(self.gdp["formulae"])):
             self.write(g)
         self.untab_write("end Groups\n")
 
-    def write_ispl_fairness(self):
+    def w_fairness(self):
         if self.fairness:
             self.write_tab("Fairness")
             for a in self.agent_index:
                 self.write(f"not_idle_{a};")
             self.untab_write("end Fairness\n")
 
-    def write_ispl_formulae(self):
+    def w_formulae(self):
         self.write_tab("Formulae")
         for f in self.gdp["formulae"]:
             self.write(self.__generate_ispl_formula(f))
@@ -295,50 +296,79 @@ def generate_access(num_resources, demand):
     if num_resources == 0:
         return []
     access = set()
-    access_size = max(randrange(demand, num_resources+1), demand)
+    if demand > num_resources:
+        access_size = num_resources
+    else:
+        access_size = max(randrange(demand, num_resources+1), demand)
     while len(access) < access_size:
         access.add(f"r{randrange(1, num_resources+1)}")
     return list(access)
 
 
-def generate_template_file(filename, bounds):
-    b = extract_bounds(bounds)
-    num_agents = randrange(b[0][0], b[0][1])
+def generate_template_file(file, bounds):
+    num_agents = randrange(bounds[0][0], bounds[0][1])
     gdp = {'fairness': False, 'formulae': ['<all> live'], 'observable': '<none>'}
     num_resources = 0
-    if len(b) > 1:
-        num_resources = randrange(b[1][0], b[1][1])
-    demand_range = (1, max(num_resources, 2))
-    if len(b) > 2:
-        demand_range = b[2]
+    if len(bounds) > 1:
+        num_resources = randrange(bounds[1][0], bounds[1][1])
+    demand_range = (0, num_resources)
+    if len(bounds) > 2:
+        demand_range = bounds[2]
     for i in range(1, num_agents+1):
         demand = randrange(demand_range[0], demand_range[1])
-        gdp[f'a{i}'] = {'access': [generate_access(num_resources, demand)], 'demand': demand}
-    with open(f"gdp_files/{filename}", 'w') as f:
+        gdp[f'a{i}'] = {'access': generate_access(num_resources, demand), 'demand': demand}
+    with open(f"{file}", 'w') as f:
         dump(gdp, f)
-    with open(f"gdp_files/{filename}", "a") as f:
+    with open(f"{file}", "a") as f:
         f.write("\n# USAGE GUIDE ===============\n# ===========================\n")
 
 
-def extract_bounds(bnds):
+def validate_and_extract(bnds):
     bnds = bnds.split(',')
     bounds = []
-    for b in bnds:
-        b = b.split("..")
-        if len(b) > 1:
-            bounds.append((int(b[0]), int(b[1])))
-        else:
-            bounds.append((int(b[0]), int(b[0])+1))
+    try:
+        for b in bnds:
+            b = b.split("..")
+            if len(b) > 1:
+                bounds.append((int(b[0]), int(b[1])))
+            else:
+                bounds.append((int(b[0]), int(b[0])+1))
+    except ValueError:
+        print("error: generator bounds must be defined as integers or as integer ranges")
+        print("examples of correct input:\n    2..4,3..5,1..4\n    3,4,2..4\n    3..7,2\n    4")
+        exit()
+    for b in bounds:
+        if b[0] > b[1]:
+            print(f"error: range {b[0]}..{b[1]} is not well formed (range start may not be greater than range end)")
+            exit()
     return bounds
+
 
 # === CLI ===========================================================
 # ===================================================================
 @click.command()
-@click.option('--gdp_file', '-gdp', default=None, type=click.Path(exists=True), help="The GDP file to convert to ISPL.")
-@click.option('--ispl_file', '-ispl', default='ispl_files/out.ispl', type=click.Path(), help="Location and name to give generated file.")
-@click.option('--fair/--nfair', '-f/-nf', default=None, help='Add fairness constraint. Default: -nf')
-@click.option('--obs/--nobs', '-o/-no', default=None, help="Make demand vars observable. Default: -no")
-@click.option('--generate', '-g', nargs=2, type=str, help="Generate a GDP model based on the specified num_agents,num_resources,agent_demand. Each paramater can be an int or an int range. EXAMPLE: -g gdp.txt 3,2..4,1..4\nNote, you may run with only num_agents. EXAMPLE: -g gdp.txt 3")
+@click.option( 
+    '--gdp_file', '-gdp', default=None, type=click.Path(exists=True), 
+    help="The GDP file to convert to ISPL."
+)
+@click.option(
+    '--ispl_file', '-ispl', default='out.ispl', type=click.Path(), 
+    help="Location and name to give generated file."
+)
+@click.option(
+    '--fair/--nfair', '-f/-nf', default=None, 
+    help='Add fairness constraint. Default: -nf'
+)
+@click.option(
+    '--obs/--nobs', '-o/-no', default=None, 
+    help="Make demand vars observable. Default: -no"
+)
+@click.option(
+    '--generate', '-g', nargs=2, type=str, 
+    help="Generate a GDP model based on the specified num_agents,num_resources,agent_demand."
+    " Each paramater can be an int or an int range. EXAMPLE: -g gdp.txt 3,2..4,1..4"
+    "\nNote, you may run with only num_agents to create a template file. EXAMPLE: -g gdp.txt 3"
+)
 
 # === main ==========================================================
 # ===================================================================
@@ -347,31 +377,34 @@ def main(fair, obs, generate, ispl_file, gdp_file):
         A tool that converts a shorthand description of a GDP model to an ISPL file that can be checked using MCMAS.\n
         USAGE EXAMPLE\n  
         GDP definition:\n
-            $ python3 parsegdp.py -t model_name.txt 3   (Then manually define rest of GDP in model_name.txt)\n
+            $ python3 parsegdp.py -g model_name.txt 3
+            (Generates a template file with 3 agents. User must manually define rest of GDP in model_name.txt)\n
             or\n
-            $ python3 parsegdp.py -g model_name.txt 3..5,7,2..7    (Generate GDP model with 3 to 5 agents, 7 resources, and (for each agent) a demand within the range [2,7]. Open file to set formulae to check)\n
+            $ python3 parsegdp.py -g model_name.txt 3..5,7,2..7
+            (Generate GDP model with 3 to 5 agents, 7 resources, and (for each agent) a demand within the range [2,7]. User must open file to set formulae to check)\n
         then\n
         ISPL generation:\n
-            $ python3 parsegdp.py -gdp model_name.txt -o -f -ispl m13.ispl    (Parse model; turn on observability and fairness; output as m13.ispl)\n
+            $ python3 parsegdp.py -gdp model_name.txt -o -f -ispl m13.ispl    
+            (Parse model; turn on observability and fairness; output as m13.ispl)\n
     """ 
     if len(generate) == 2:
-        generate_template_file(generate[0], generate[1])
+        generate_template_file(generate[0], validate_and_extract(generate[1]))
     elif gdp_file != None:
-        gdpp = GDPParser(
-            load(open(gdp_file,"r")),
+        ispl_generator = ISPLGenerator(
+            load(open(gdp_file,"r"), Loader=SafeLoader),
             open(ispl_file, "w"),
             fair,
             obs
         )
-        gdpp.write_ispl_single_assignment()
-        gdpp.write_ispl_environment()
-        gdpp.write_ispl_agents()
-        gdpp.write_ispl_evaluation()
-        gdpp.write_ispl_init_states()
-        gdpp.write_ispl_groups()
-        gdpp.write_ispl_fairness()
-        gdpp.write_ispl_formulae()
-        gdpp.__del__()
+        ispl_generator.w_single_assignment()
+        ispl_generator.w_environment()
+        ispl_generator.w_agents()
+        ispl_generator.w_evaluation()
+        ispl_generator.w_init_states()
+        ispl_generator.w_groups()
+        ispl_generator.w_fairness()
+        ispl_generator.w_formulae()
+        ispl_generator.__del__()
         print(f"done, '{ispl_file}' created")
     else:
         print("run with --help for usage guide, ex:\npython3 parsegdp.py --help")

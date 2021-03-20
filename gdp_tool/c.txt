@@ -1,25 +1,22 @@
 a1:
   access:
-  - []
+  - r1
   demand: 1
 a2:
   access:
-  - []
-  demand: 1
+  - r2
+  - r3
+  - r1
+  demand: 3
 a3:
   access:
-  - []
-  demand: 1
-a4:
-  access:
-  - []
-  demand: 1
-a5:
-  access:
-  - []
-  demand: 1
+  - r2
+  - r3
+  - r1
+  demand: 3
 fairness: false
-formulae: [<all> live]
+formulae:
+- <all> live
 observable: <none>
 
 # USAGE GUIDE ===============
