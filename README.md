@@ -12,10 +12,11 @@ A tool that converts shorthand GDP input into an explicilty defined input file f
   * linux $ sudo apt-get install python3.6 (https://docs.python-guide.org/starting/install3/linux/)
 
 ### Usage Guide
-1) Get the parsegdp.py file (located in gdp_tool in this project) <br>
-2) Navigate to the directory where you saved parsegdp.py and run the following commands: <br>
-$ python3 parsegdp.py -txt <br>
-_this will generate a template file explaining how you can define the GDP. Open this file and modify it as required_ <br>
-$ python3 parsegdp.py template.txt <br>
-_this will output 'out.ispl'_<br>
-2) Run MCMAS with out.ispl as our input
+1) Get the gifg.py file (located in gdp_tool in this project) <br>
+2) Navigate to the directory where you saved gigf.py and run the following commands: <br>
+$ python3 gifg.py --help <br>(get info on how the tool should be used at any time)<br>
+$ python3 gifg.py -g model_name.txt 3 <br>
+(Generates a template file with 3 agents. User must manually define rest of GDP in model_name.txt) <br>
+$ python3 gifg.py -gdp model_name.txt -o -f -ispl m13.ispl <br>
+(Parse model; turn on observability and fairness; output as m13.ispl) <br>
+3) Run MCMAS with out.ispl as our input
