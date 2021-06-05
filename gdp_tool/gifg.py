@@ -385,7 +385,7 @@ def main(fair, obs, generate, ispl_file, gdp_file):
             (Generate GDP model with 3 to 5 agents, 7 resources, and (for each agent) a demand within the range [2,7]. User must open file to set formulae to check)\n
         then\n
         ISPL generation:\n
-            $ python3 gifg.py -gdp model_name.txt -o -f -ispl m13.ispl    
+            $ python3 gifg.py -gdp model_name.txt -o -f -ispl m13.ispl
             (Parse model; turn on observability and fairness; output as m13.ispl)\n
     """
     if generate is not None and len(generate) == 2:
