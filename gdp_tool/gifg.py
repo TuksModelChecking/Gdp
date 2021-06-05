@@ -5,22 +5,23 @@ from yaml import SafeLoader
 import click
 from random import randrange
 
+
 class ISPLGenerator:
     def __init__(self, gdp, ispl_file, fair, obs):
         self.tab_depth = 0
         self.gdp = gdp
         self.ispl_file = ispl_file
-        if fair == None:
-            self.fairness = False if gdp["fairness"] == None else gdp["fairness"]
+        if fair is None:
+            self.fairness = False if gdp["fairness"] is None else gdp["fairness"]
         else:
             self.fairness = fair
         self.agent_index = []
         self.resources = []
         malformed = False
         for item in gdp:
-            if item in ["fairness", "formulae","observable"]:
+            if item in ["fairness", "formulae", "observable"]:
                 continue
-            if gdp[item]["demand"] == None:
+            if gdp[item]["demand"] is None:
                 print(f"error: agent {item} requires a demand integer.")
                 malformed = True
             if not isinstance(gdp[item]["access"], list) or len(gdp[item]["access"]) == 0:
@@ -40,9 +41,9 @@ class ISPLGenerator:
         self.resources.sort()
         self.n_a = len(self.agent_index)
         self.n_r = len(self.resources)
-        if obs == None:
+        if obs is None:
             self.observable = self.__explicit_agent_set(
-                "" if self.gdp["observable"] == None else self.gdp["observable"].strip()[1:-1]
+                "" if self.gdp["observable"] is None else self.gdp["observable"].strip()[1:-1]
             )
         else:
             self.observable = self.__explicit_agent_set(
@@ -98,7 +99,8 @@ class ISPLGenerator:
                 fill_gap = True
                 continue
             if fill_gap:
-                for i in range(self.agent_index.index(last_agent)+1, self.agent_index.index(agent)): ## list has to be sorted correctly
+                for i in range(self.agent_index.index(last_agent) + 1,
+                               self.agent_index.index(agent)):  ## list has to be sorted correctly
                     agents_explicit.add(self.agent_index[i])
                 fill_gap = False
             agents_explicit.add(agent)
@@ -124,7 +126,7 @@ class ISPLGenerator:
             return self.__agents_in_group(g)
 
     def __groups_to_ispl(self, groups):
-        return [(g + " = " + str(self.__explicit_agent_set(g)).replace('\'','') + ";") for g in groups]
+        return [(g + " = " + str(self.__explicit_agent_set(g)).replace('\'', '') + ";") for g in groups]
 
     def __generate_achieve(self, acting_group):
         achieve = ""
@@ -147,7 +149,7 @@ class ISPLGenerator:
 
     def __generate_ispl_formula(self, formula):
         formula = formula.strip()
-        group = formula[formula.find('<')+1:formula.find('>')]
+        group = formula[formula.find('<') + 1:formula.find('>')]
         if formula.endswith("achieve"):
             return self.__generate_achieve(group)
         elif formula.endswith("live"):
@@ -199,10 +201,10 @@ class ISPLGenerator:
                     if a in self.observable:
                         self.write(f"rem_{a} = rem_{a} - 1 if ({self.__take_condition(r, a)});")
                         self.write(f"rem_{a} = rem_{a} + 1 if ({r} = {a} and {a}.Action = rel_{r});")
-                        self.write(f"rem_{a} = {self.gdp[a]['demand']} if ({r} = {a} and {a}.Action = relall);\n")      
+                        self.write(f"rem_{a} = {self.gdp[a]['demand']} if ({r} = {a} and {a}.Action = relall);\n")
         self.untab_write("end Evolution")
         self.untab_write("end Agent\n")
-    
+
     def w_agents(self):
         for agent in self.agent_index:
             agent
@@ -268,9 +270,9 @@ class ISPLGenerator:
             self.write(f"Environment.{r} = none and")
         for a in self.observable:
             self.write(f"Environment.rem_{a} = {self.gdp[a]['demand']} and")
-        for i in range(1, self.n_a-1):
+        for i in range(1, self.n_a - 1):
             self.write(f"{self.agent_index[i]}.rem = {self.gdp[self.agent_index[i]]['demand']} and")
-        self.write(f"{self.agent_index[self.n_a-1]}.rem = {self.gdp[self.agent_index[self.n_a-1]]['demand']};")
+        self.write(f"{self.agent_index[self.n_a - 1]}.rem = {self.gdp[self.agent_index[self.n_a - 1]]['demand']};")
         self.untab_write("end InitStates\n")
 
     def w_groups(self):
@@ -292,6 +294,7 @@ class ISPLGenerator:
             self.write(self.__generate_ispl_formula(f))
         self.untab_write("end Formulae\n")
 
+
 def generate_access(num_resources, demand):
     if num_resources == 0:
         return []
@@ -299,9 +302,9 @@ def generate_access(num_resources, demand):
     if demand > num_resources:
         access_size = num_resources
     else:
-        access_size = max(randrange(demand, num_resources+1), demand)
+        access_size = max(randrange(demand, num_resources + 1), demand)
     while len(access) < access_size:
-        access.add(f"r{randrange(1, num_resources+1)}")
+        access.add(f"r{randrange(1, num_resources + 1)}")
     return list(access)
 
 
@@ -314,7 +317,7 @@ def generate_template_file(file, bounds):
     demand_range = (0, num_resources)
     if len(bounds) > 2:
         demand_range = bounds[2]
-    for i in range(1, num_agents+1):
+    for i in range(1, num_agents + 1):
         demand = randrange(demand_range[0], demand_range[1])
         gdp[f'a{i}'] = {'access': generate_access(num_resources, demand), 'demand': demand}
     with open(f"{file}", 'w') as f:
@@ -332,7 +335,7 @@ def validate_and_extract(bnds):
             if len(b) > 1:
                 bounds.append((int(b[0]), int(b[1])))
             else:
-                bounds.append((int(b[0]), int(b[0])+1))
+                bounds.append((int(b[0]), int(b[0]) + 1))
     except ValueError:
         print("error: generator bounds must be defined as integers or as integer ranges")
         print("examples of correct input:\n    2..4,3..5,1..4\n    3,4,2..4\n    3..7,2\n    4")
@@ -347,29 +350,28 @@ def validate_and_extract(bnds):
 # === CLI ===========================================================
 # ===================================================================
 @click.command()
-@click.option( 
-    '--gdp_file', '-gdp', default=None, type=click.Path(exists=True), 
+@click.option(
+    '--gdp_file', '-gdp', default=None, type=click.Path(exists=True),
     help="The GDP file to convert to ISPL."
 )
 @click.option(
-    '--ispl_file', '-ispl', default='out.ispl', type=click.Path(), 
+    '--ispl_file', '-ispl', default='out.ispl', type=click.Path(),
     help="Location and name to give generated file."
 )
 @click.option(
-    '--fair/--nfair', '-f/-nf', default=None, 
+    '--fair/--nfair', '-f/-nf', default=None,
     help='Add fairness constraint. Default: -nf'
 )
 @click.option(
-    '--obs/--nobs', '-o/-no', default=None, 
+    '--obs/--nobs', '-o/-no', default=None,
     help="Make demand vars observable. Default: -no"
 )
 @click.option(
-    '--generate', '-g', nargs=2, type=str, 
+    '--generate', '-g', nargs=2, type=str,
     help="Generate a GDP model based on the specified num_agents,num_resources,agent_demand."
-    " Each paramater can be an int or an int range. EXAMPLE: -g gdp.txt 3,2..4,1..4"
-    "\nNote, you may run with only num_agents to create a template file. EXAMPLE: -g gdp.txt 3"
+         " Each paramater can be an int or an int range. EXAMPLE: -g gdp.txt 3,2..4,1..4"
+         "\nNote, you may run with only num_agents to create a template file. EXAMPLE: -g gdp.txt 3"
 )
-
 # === main ==========================================================
 # ===================================================================
 def main(fair, obs, generate, ispl_file, gdp_file):
@@ -386,12 +388,12 @@ def main(fair, obs, generate, ispl_file, gdp_file):
         ISPL generation:\n
             $ python3 parsegdp.py -gdp model_name.txt -o -f -ispl m13.ispl    
             (Parse model; turn on observability and fairness; output as m13.ispl)\n
-    """ 
+    """
     if len(generate) == 2:
         generate_template_file(generate[0], validate_and_extract(generate[1]))
-    elif gdp_file != None:
+    elif gdp_file is not None:
         ispl_generator = ISPLGenerator(
-            load(open(gdp_file,"r"), Loader=SafeLoader),
+            load(open(gdp_file, "r"), Loader=SafeLoader),
             open(ispl_file, "w"),
             fair,
             obs
@@ -408,6 +410,7 @@ def main(fair, obs, generate, ispl_file, gdp_file):
         print(f"done, '{ispl_file}' created")
     else:
         print("run with --help for usage guide, ex:\npython3 parsegdp.py --help")
+
 
 if __name__ == '__main__':
     main()
