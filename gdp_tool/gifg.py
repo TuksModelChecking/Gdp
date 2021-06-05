@@ -1,4 +1,3 @@
-from sys import argv
 from yaml import load
 from yaml import dump
 from yaml import SafeLoader
@@ -389,7 +388,7 @@ def main(fair, obs, generate, ispl_file, gdp_file):
             $ python3 parsegdp.py -gdp model_name.txt -o -f -ispl m13.ispl    
             (Parse model; turn on observability and fairness; output as m13.ispl)\n
     """
-    if len(generate) == 2:
+    if generate is not None and len(generate) == 2:
         generate_template_file(generate[0], validate_and_extract(generate[1]))
     elif gdp_file is not None:
         ispl_generator = ISPLGenerator(
