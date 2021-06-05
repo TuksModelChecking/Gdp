@@ -206,7 +206,6 @@ class ISPLGenerator:
 
     def w_agents(self):
         for agent in self.agent_index:
-            agent
             self.write_tab(f"Agent {agent}")
             actions = "{"
             lobsvars = "{"
@@ -243,11 +242,11 @@ class ISPLGenerator:
             self.write_tab("Evolution:")
             for my_r in self.gdp[agent]["access"]:
                 onr = self.__others_not_requesting(my_r, agent)
-                self.write(f"rem = rem - 1 if (Action = req_{my_r} and Environment.{my_r} = none and {onr});")
+                self.write(f"rem = rem - 1 if (Action = req_{my_r} and {onr});")
                 self.write(f"rem = rem + 1 if (Action = rel_{my_r});")
                 self.write(f"rem = {self.gdp[agent]['demand']} if (Action = relall);\n")
                 if self.fairness:
-                    self.write(f"idl = false if (Action = req_{my_r} and Environment.{my_r} = none and {onr});")
+                    self.write(f"idl = false if (Action = req_{my_r} and {onr});")
                     self.write(f"idl = false if (Action = rel_{my_r});")
                     self.write(f"idl = false if (Action = relall);")
                     self.write(f"idl = true if (Action = idle);\n")
