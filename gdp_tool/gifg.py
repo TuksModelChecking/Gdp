@@ -268,7 +268,7 @@ class ISPLGenerator:
             self.write(f"Environment.{r} = none and")
         for a in self.observable:
             self.write(f"Environment.rem_{a} = {self.gdp[a]['demand']} and")
-        for i in range(1, self.n_a - 1):
+        for i in range(0, self.n_a - 1):
             self.write(f"{self.agent_index[i]}.rem = {self.gdp[self.agent_index[i]]['demand']} and")
         self.write(f"{self.agent_index[self.n_a - 1]}.rem = {self.gdp[self.agent_index[self.n_a - 1]]['demand']};")
         self.untab_write("end InitStates\n")
