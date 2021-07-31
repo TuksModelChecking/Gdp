@@ -28,8 +28,33 @@ class IDStore:
         return self.variable_list[variable]
 
 
+def extract_negation_and_variable(symbol):
+    symbol_string = str(symbol)
+    if symbol_string[0] == '~':
+        negation_sign = -1
+        symbol_string = symbol_string[1:]
+    else:
+        negation_sign = 1
+    return negation_sign, symbol_string
+
+
+def symbol_cnf_to_int_cnf(symbol_cnf: Tuple, store: IDStore):
+    int_cnf = []
+    for clause in symbol_cnf:
+        if type(clause) is Tuple:
+            new_clause = []
+            for symbol in clause:
+                negation_sign, variable = extract_negation_and_variable(symbol)
+                new_clause.append(negation_sign * store.get_or_generate_var_id(variable))
+            int_cnf.append(new_clause)
+        else:
+            negation_sign, variable = extract_negation_and_variable(clause)
+            int_cnf.append(negation_sign * store.get_or_generate_var_id(variable))
+    return int_cnf
+
+
 # By Definition 12 in Paper
-def encode_resource_state(resource: int, agent: int, time: int, num_agents: int, store: IDStore) -> And:
+def encode_resource_state(resource: int, agent: int, time: int, num_agents: int) -> And:
     m: int = math.ceil(math.log(num_agents, 2))
     symbol_assembly_line = []
     for b in reversed(range(0, m)):
@@ -38,10 +63,12 @@ def encode_resource_state(resource: int, agent: int, time: int, num_agents: int,
 
 
 STORE = IDStore()
-s = encode_resource_state(1, 1, 1, 12, STORE).args
+print(encode_resource_state(1, 1, 1, 12))
+s = encode_resource_state(1, 1, 1, 12).args
 print(s)
 print(type(s))
 for t in s:
     print(t)
     print(t.args)
 
+print(symbol_cnf_to_int_cnf(s, STORE))
