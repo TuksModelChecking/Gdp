@@ -9,11 +9,11 @@ from pyeda.inter import *
 problem = load(open("input.yml", "r"), Loader=SafeLoader)
 
 
-def to_binary_string(number: int, length: int) -> str:
-    return format(number, 'b').zfill(length)
+def to_binary_string(number: int, x: int) -> str:
+    return format(number, 'b').zfill(m(x))
 
 
-def calculate_m(x) -> int:
+def m(x) -> int:
     return math.ceil(math.log(x, 2))
 
 
@@ -29,7 +29,7 @@ def binary_encode(binary_string: str, name_prefix: str):
 # By Definition 12 in Paper
 def encode_resource_state(resource: int, agent: int, time: int, total_num_agents: int) -> And:
     return binary_encode(
-        to_binary_string(agent, calculate_m(total_num_agents)),
+        to_binary_string(agent, total_num_agents),
         f"r{resource}a{agent}t{time}"
     )
 
@@ -37,7 +37,7 @@ def encode_resource_state(resource: int, agent: int, time: int, total_num_agents
 # By Definition 13 in Paper
 def encode_action(action: int, agent: int, time: int, total_num_actions: int) -> And:
     return binary_encode(
-        to_binary_string(agent, calculate_m(total_num_actions)),
+        to_binary_string(agent, total_num_actions),
         f"act{action}a{agent}t{time}"
     )
 
