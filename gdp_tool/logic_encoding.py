@@ -41,3 +41,16 @@ def encode_action(action: int, agent: int, time: int, total_num_actions: int) ->
         f"act{action}a{agent}t{time}"
     )
 
+
+# By Definition 14 in Paper
+def encode_state_observation(acc_list: list, agent: int, total_num_agents: int, time: int) -> And:
+    to_conjunct = []
+    for resource in acc_list:
+        to_conjunct.append(
+            encode_resource_state(resource, agent, time, total_num_agents)
+        )
+    return And(to_conjunct)
+
+
+# By Definition 15 in Paper
+
