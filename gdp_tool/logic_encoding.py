@@ -9,16 +9,35 @@ from pyeda.inter import *
 problem = load(open("input.yml", "r"), Loader=SafeLoader)
 
 
-def to_binary_string(number: int) -> str:
-    return format(number, 'b')
+def to_binary_string(number: int, length: int) -> str:
+    return format(number, 'b').zfill(length)
+
+
+def calculate_m(x) -> int:
+    return math.ceil(math.log(x, 2))
+
+
+# By Definition 12, 13 in Paper
+def binary_encode(binary_string: str, name_prefix: str):
+    to_conjunct = []
+    for index, char in enumerate(reversed(binary_string)):
+        new_var = f"{name_prefix}b{index}"
+        to_conjunct.append(exprvar(new_var if char == '1' else Not(new_var)))
+    return And(to_conjunct)
 
 
 # By Definition 12 in Paper
-def encode_resource_state(resource: int, agent: int, time: int, num_agents: int) -> And:
-    b: int = math.ceil(math.log(num_agents, 2))
-    to_conjunct = []
-    for char in to_binary_string(agent):
-        b = b - 1
-        new_var = f"r{resource}a{agent}t{time}b{b}"
-        to_conjunct.append(exprvar(new_var if char == '1' else Not(new_var)))
-    return And(to_conjunct)
+def encode_resource_state(resource: int, agent: int, time: int, total_num_agents: int) -> And:
+    return binary_encode(
+        to_binary_string(agent, calculate_m(total_num_agents)),
+        f"r{resource}a{agent}t{time}"
+    )
+
+
+# By Definition 13 in Paper
+def encode_action(action: int, agent: int, time: int, total_num_actions: int) -> And:
+    return binary_encode(
+        to_binary_string(agent, calculate_m(total_num_actions)),
+        f"act{action}a{agent}t{time}"
+    )
+
