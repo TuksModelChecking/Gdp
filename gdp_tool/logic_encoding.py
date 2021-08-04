@@ -17,12 +17,14 @@ def m(x) -> int:
     return math.ceil(math.log(x, 2))
 
 
-# By Definition 12, 13 in Paper
+# By Definition 12, 13, 15 in Paper
 def binary_encode(binary_string: str, name_prefix: str):
     to_conjunct = []
     for index, char in enumerate(reversed(binary_string)):
         new_var = f"{name_prefix}b{index}"
-        to_conjunct.append(exprvar(new_var if char == '1' else Not(new_var)))
+        to_conjunct.append(
+            exprvar(new_var if char == '1' else Not(new_var))
+        )
     return And(to_conjunct)
 
 
@@ -53,4 +55,12 @@ def encode_state_observation(acc_list: list, agent: int, total_num_agents: int, 
 
 
 # By Definition 15 in Paper
+def encode_strategic_decision(action: int, agent: int, total_possible_num_actions: int, time: int) -> And:
+    return binary_encode(
+        to_binary_string(action, total_possible_num_actions),
+        f"s_act{action}a{agent}t{time}"
+    )
 
+
+# By definition 16 in Paper
+def encode_uniform_action(action: int, agent: int, time: int, total_num_actions: int) -> And:
