@@ -32,10 +32,10 @@ class MRA:
 @dataclass
 class AgentAlias:
     id: int
-    d_left: int
+    d: int
 
     def clone(self):
-        return AgentAlias(self.id, self.d_left)
+        return AgentAlias(self.id, self.d)
 
 
 @dataclass
@@ -44,7 +44,7 @@ class UnCollapsedState:
     agents: list[AgentAlias]
 
     def clone(self):
-        return UnCollapsedState(self.resource, list(map(lambda aa: aa.clone(), self.agents)))
+        return UnCollapsedState(self.resource, list(map(lambda a: a.clone(), self.agents)))
 
 
 @dataclass
@@ -110,21 +110,34 @@ def explicate_state_observation_set(a_i: Agent, mra: MRA) -> list[list[State]]:
     return collapse_observation_set(un_collapsed_observation_set)
 
 
+def initial_demand_saturation(un_collapsed_states: list[UnCollapsedState]):
+    initial_saturation: dict[int, int] = {}
+    for state in un_collapsed_states:
+        for agent in state.agents:
+            initial_saturation[agent.id] = agent.d
+    return initial_saturation
+
+
 def collapse_observation_set(un_collapsed_states: list[UnCollapsedState]):
-    return h_collapse_observation_set_rec(un_collapsed_states, [])
+    return h_collapse_observation_set_rec(un_collapsed_states, [], initial_demand_saturation(un_collapsed_states))
 
 
-def h_collapse_observation_set_rec(un_collapsed_states: list[UnCollapsedState], collapsed_observation: list[State]):
+def h_collapse_observation_set_rec(
+        un_collapsed_states: list[UnCollapsedState],
+        collapsed_observation: list[State],
+        agent_demand_saturation: dict[int, int]
+):
     if len(un_collapsed_states) == 0:
         return [collapsed_observation]
     ucs: UnCollapsedState = un_collapsed_states.pop()
     result_group = []
     for a in ucs.agents:
-        if a.d_left > 0:
-            a.d_left = a.d_left - 1
+        if agent_demand_saturation[a.id] > 0:
+            agent_demand_saturation[a.id] -= 1
             result_group += h_collapse_observation_set_rec(
                 list(map(lambda k: k.clone(), un_collapsed_states)),
                 list(map(lambda x: x.clone(), collapsed_observation)) + [State(a.id, ucs.resource)],
+                agent_demand_saturation.copy()
             )
     return result_group
 
@@ -187,4 +200,4 @@ def h_encode_uniformity_clause(agent, total_num_agents, action, total_possible_a
 
 
 target_mra = read_in_mra("input.yml")
-print(explicate_state_observation_set(target_mra.agt[0], target_mra))
+print(explicate_state_observation_set(target_mra.agt[1], target_mra))
