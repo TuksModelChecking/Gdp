@@ -1,9 +1,9 @@
 import math
-
-from yaml import load
-from yaml import SafeLoader
-from pyeda.inter import *
 from dataclasses import dataclass
+
+from pyeda.inter import *
+from yaml import SafeLoader
+from yaml import load
 
 # Let "Paper" be used to denote the SMBF2021 submission by Nils Timm and Josua Botha
 
@@ -52,6 +52,27 @@ class State:
     a: int
     r: int
 
+    def clone(self):
+        return State(self.a, self.r)
+
+
+def read_in_mra(path: str):
+    yml_data = load(open(path, "r"), Loader=SafeLoader)
+    agents = []
+    for item in yml_data:
+        agents.append(
+            Agent(
+                id=int(item[1:]),
+                acc=list(map(lambda r: int(r[1:]), yml_data[item]["access"])),
+                d=yml_data[item]["demand"]
+            )
+        )
+    resources: set = set()
+    for a in agents:
+        for resource in a.acc:
+            resources.add(resource)
+    return MRA(agents, list(resources))
+
 
 def to_binary_string(number: int, x: int) -> str:
     return format(number, 'b').zfill(m(x))
@@ -82,31 +103,15 @@ def explicate_all_possible_states_of_resource(r: int, agt: list[Agent]) -> UnCol
 
 
 # By Definition 4 in Paper
-def map_of_agents_involved(un_collapsed_observation_set) -> dict:
-    agents_involved: dict[int, int] = {}
-    for uco in un_collapsed_observation_set:
-        for a in uco.agents:
-            agents_involved[a] = 0
-    return agents_involved
-
-
-# def explicate_state_observation_set(a_i: Agent, mra: MRA) -> list[list[State]]:
-#     un_collapsed_observation_set = []
-#     for r in a_i.acc:
-#         un_collapsed_observation_set.append(explicate_all_possible_states_of_resource(r, mra.agt))
-#     agents_involved = map_of_agents_involved(un_collapsed_observation_set)
-#     collapsed_observation_set = []
-#     for uco in un_collapsed_observation_set:
-#         for a in uco.agents:
-#             collapsed_observation_set.append([])
+def explicate_state_observation_set(a_i: Agent, mra: MRA) -> list[list[State]]:
+    un_collapsed_observation_set = []
+    for r in a_i.acc:
+        un_collapsed_observation_set.append(explicate_all_possible_states_of_resource(r, mra.agt))
+    return collapse_observation_set(un_collapsed_observation_set)
 
 
 def collapse_observation_set(un_collapsed_states: list[UnCollapsedState]):
     return h_collapse_observation_set_rec(un_collapsed_states, [])
-
-
-def clone(un_collapsed_observation: list[UnCollapsedState]):
-    return list(map(lambda ucs: ucs.clone(), un_collapsed_observation))
 
 
 def h_collapse_observation_set_rec(un_collapsed_states: list[UnCollapsedState], collapsed_observation: list[State]):
@@ -117,10 +122,9 @@ def h_collapse_observation_set_rec(un_collapsed_states: list[UnCollapsedState], 
     for a in ucs.agents:
         if a.d_left > 0:
             a.d_left = a.d_left - 1
-            collapsed_observation.append(State(a.id, ucs.resource))
             result_group += h_collapse_observation_set_rec(
-                clone(un_collapsed_states),
-                collapsed_observation,
+                list(map(lambda k: k.clone(), un_collapsed_states)),
+                list(map(lambda x: x.clone(), collapsed_observation)) + [State(a.id, ucs.resource)],
             )
     return result_group
 
@@ -180,3 +184,7 @@ def h_encode_uniformity_clause(agent, total_num_agents, action, total_possible_a
 # Evolution
 
 # Initial State
+
+
+target_mra = read_in_mra("input.yml")
+print(explicate_state_observation_set(target_mra.agt[0], target_mra))
