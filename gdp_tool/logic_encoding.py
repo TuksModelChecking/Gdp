@@ -73,7 +73,7 @@ def encode_m_k(m: MRA, k: int) -> And:
 def read_in_mra(path: str):
     yml_data = load(open(path, "r"), Loader=SafeLoader)
     agents = []
-    for a_name in yml_data[agents]:
+    for a_name in yml_data["agents"]:
         agents.append(
             Agent(
                 id=int(a_name[1:]),
@@ -273,7 +273,8 @@ def encode_strategic_decision(action: str, agent: Agent, time: int) -> And:
 # Initial State
 
 
-# problem = read_in_mra("input.yml")
+problem = read_in_mra("input.yml")
+print(problem)
 # for itm in explicate_state_observation_set(problem.agt[1], problem):
 #     print(itm)
 
