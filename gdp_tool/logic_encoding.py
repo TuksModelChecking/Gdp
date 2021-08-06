@@ -160,6 +160,17 @@ def encode_r_evolution(r: int, m: MRA, time: int) -> Or:
     return Or()
 
 
+# By Definition 14 in Paper
+def encode_goal_reachability_formula(agents: list[Agent], total_num_agents: int, k: int) -> And:
+    to_conjunct = []
+    for a in agents:
+        to_or = []
+        for t in range(0, k):
+            to_or.append(encode_goal(a, t, total_num_agents))
+        to_conjunct.append(Or(to_or))
+    return And(to_conjunct)
+
+
 # By Definition 17 in Paper
 def encode_resource_state(resource: int, agent: int, time: int, total_num_agents: int) -> And:
     return binary_encode(
@@ -230,5 +241,5 @@ def encode_strategic_decision(action: int, agent: Agent, time: int) -> And:
 # for itm in explicate_state_observation_set(problem.agt[1], problem):
 #     print(itm)
 
-print(h_all_satisfactory_resource_combinations([1, 2, 3, 4], 3))
+print(h_all_satisfactory_resource_combinations([1, 2, 3, 4, 5], 3))
 
