@@ -73,23 +73,23 @@ def encode_m_k(m: MRA, k: int) -> And:
 def read_in_mra(path: str):
     yml_data = load(open(path, "r"), Loader=SafeLoader)
     agents = []
-    for a_name in yml_data["agents"]:
-        agents.append(
-            Agent(
-                id=int(a_name[1:]),
-                acc=list(map(lambda r: int(r[1:]), yml_data[a_name]["access"])),
-                d=yml_data[a_name]["demand"]
-            )
-        )
     resources: set = set()
-    for a in agents:
-        for resource in a.acc:
+    for a_name in yml_data["agents"]:
+        agent = Agent(
+            id=int(a_name[1:]),
+            acc=list(map(lambda r: int(r[1:]), yml_data[a_name]["access"])),
+            d=yml_data[a_name]["demand"]
+        )
+        agents.append(
+            agent
+        )
+        for resource in agent.acc:
             resources.add(resource)
     return Problem(
         mra=MRA(
             agt=agents,
             res=list(resources),
-            coalition=list(map(lambda x: int(x[1:]), yml_data["coalition"]))
+            coalition=list(map(lambda a: int(a[1:]), yml_data["coalition"]))
         ),
         k=int(yml_data["k"])
     )
