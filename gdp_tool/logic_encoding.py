@@ -5,9 +5,8 @@ from pyeda.inter import *
 from yaml import SafeLoader
 from yaml import load
 
-# Let "Paper" be used to denote the SMBF2021 submission by Nils Timm and Josua Botha
 
-problem = load(open("input.yml", "r"), Loader=SafeLoader)
+# Let "Paper" be used to denote the SMBF2021 submission by Nils Timm and Josua Botha
 
 
 @dataclass
@@ -40,11 +39,11 @@ class AgentAlias:
 
 @dataclass
 class UnCollapsedState:
-    resource: int
+    r: int
     agents: list[AgentAlias]
 
     def clone(self):
-        return UnCollapsedState(self.resource, list(map(lambda a: a.clone(), self.agents)))
+        return UnCollapsedState(self.r, list(map(lambda a: a.clone(), self.agents)))
 
 
 @dataclass
@@ -82,7 +81,6 @@ def m(x) -> int:
     return math.ceil(math.log(x, 2))
 
 
-# By Definition 12, 13, 15 in Paper
 def binary_encode(binary_string: str, name_prefix: str):
     to_conjunct = []
     for index, char in enumerate(reversed(binary_string)):
@@ -94,7 +92,14 @@ def binary_encode(binary_string: str, name_prefix: str):
 
 
 # By Definition 4 in Paper
-def explicate_all_possible_states_of_resource(r: int, agt: list[Agent]) -> UnCollapsedState:
+def explicate_state_observation_set(a_i: Agent, mra: MRA) -> list[list[State]]:
+    un_collapsed_observation_set = []
+    for r in a_i.acc:
+        un_collapsed_observation_set.append(h_explicate_all_possible_states_of_resource(r, mra.agt))
+    return h_collapse_observation_set(un_collapsed_observation_set)
+
+
+def h_explicate_all_possible_states_of_resource(r: int, agt: list[Agent]) -> UnCollapsedState:
     agents_with_acc = []
     for a in agt:
         if r in a.acc:
@@ -102,31 +107,15 @@ def explicate_all_possible_states_of_resource(r: int, agt: list[Agent]) -> UnCol
     return UnCollapsedState(r, agents_with_acc)
 
 
-# By Definition 4 in Paper
-def explicate_state_observation_set(a_i: Agent, mra: MRA) -> list[list[State]]:
-    un_collapsed_observation_set = []
-    for r in a_i.acc:
-        un_collapsed_observation_set.append(explicate_all_possible_states_of_resource(r, mra.agt))
-    return collapse_observation_set(un_collapsed_observation_set)
+def h_collapse_observation_set(un_collapsed_states: list[UnCollapsedState]):
+    return h_rec_collapse_observation_set(un_collapsed_states, [], h_initial_demand_saturation(un_collapsed_states))
 
 
-def initial_demand_saturation(un_collapsed_states: list[UnCollapsedState]):
-    initial_saturation: dict[int, int] = {}
-    for state in un_collapsed_states:
-        for agent in state.agents:
-            initial_saturation[agent.id] = agent.d
-    return initial_saturation
-
-
-def collapse_observation_set(un_collapsed_states: list[UnCollapsedState]):
-    return h_collapse_observation_set_rec(un_collapsed_states, [], initial_demand_saturation(un_collapsed_states))
-
-
-def h_collapse_observation_set_rec(
+def h_rec_collapse_observation_set(
         un_collapsed_states: list[UnCollapsedState],
         collapsed_observation: list[State],
         agent_demand_saturation: dict[int, int]
-):
+) -> list[list[State]]:
     if len(un_collapsed_states) == 0:
         return [collapsed_observation]
     ucs: UnCollapsedState = un_collapsed_states.pop()
@@ -134,15 +123,44 @@ def h_collapse_observation_set_rec(
     for a in ucs.agents:
         if agent_demand_saturation[a.id] > 0:
             agent_demand_saturation[a.id] -= 1
-            result_group += h_collapse_observation_set_rec(
+            result_group += h_rec_collapse_observation_set(
                 list(map(lambda k: k.clone(), un_collapsed_states)),
-                list(map(lambda x: x.clone(), collapsed_observation)) + [State(a.id, ucs.resource)],
+                list(map(lambda x: x.clone(), collapsed_observation)) + [State(a.id, ucs.r)],
                 agent_demand_saturation.copy()
             )
     return result_group
 
 
+def h_initial_demand_saturation(un_collapsed_states: list[UnCollapsedState]):
+    initial_saturation: dict[int, int] = {}
+    for state in un_collapsed_states:
+        for agent in state.agents:
+            initial_saturation[agent.id] = agent.d
+    return initial_saturation
+
+
 # By Definition 12 in Paper
+def encode_initial_state(num_resources: int, num_agents: int) -> And:
+    to_conjunct = []
+    for r in range(0, num_resources):
+        to_conjunct.append(encode_resource_state(r, 0, 0, num_agents))
+    return And(to_conjunct)
+
+
+# By Definition 13 in Paper
+def encode_evolution(m: MRA, time: int) -> And:
+    to_conjunct = []
+    for r in m.res:
+        to_conjunct.append(encode_r_evolution(r, m, time))
+    return And(to_conjunct)
+
+
+# By Definition 13 in Paper
+def encode_r_evolution(r: int, m: MRA, time: int) -> Or:
+    return Or()
+
+
+# By Definition 17 in Paper
 def encode_resource_state(resource: int, agent: int, time: int, total_num_agents: int) -> And:
     return binary_encode(
         to_binary_string(agent, total_num_agents),
@@ -150,7 +168,44 @@ def encode_resource_state(resource: int, agent: int, time: int, total_num_agents
     )
 
 
-# By Definition 13 in Paper
+# By Definition 18 in Paper
+def encode_state_observation(state_observation: list[State], total_num_agents: int, time: int) -> And:
+    to_conjunct = []
+    for state in state_observation:
+        to_conjunct.append(
+            encode_resource_state(state.r, state.a, time, total_num_agents)
+        )
+    return And(to_conjunct)
+
+
+# By Definition 19 in Paper
+def encode_goal(agent: Agent, time: int, total_num_agents: int) -> Or:
+    to_or = []
+    for combination in h_all_satisfactory_resource_combinations(agent.acc, agent.d):
+        for r in combination:
+            to_or.append(encode_resource_state(r, agent.id, time, total_num_agents))
+    return Or(to_or)
+
+
+# return all combination of k elements from n
+def h_all_satisfactory_resource_combinations(acc: list[int], demand: int) -> list[list[int]]:
+    return h_rec_all_satisfactory_resource_combinations(acc, [], 0, demand)
+
+
+def h_rec_all_satisfactory_resource_combinations(acc: list[int], c: list[int], start: int, d: int) -> list[list[int]]:
+    if len(acc) == 0 or d == 0:
+        return [c]
+    combinations = []
+    for i in range(start, len(acc)):
+        acc_copy = acc.copy()
+        acc_copy.remove(acc[i])
+        c_copy = c.copy()
+        c_copy.append(acc[i])
+        combinations += h_rec_all_satisfactory_resource_combinations(acc_copy, c_copy, i, d - 1)
+    return combinations
+
+
+# By Definition 20 in Paper
 def encode_action(action: int, agent: int, time: int, total_possible_actions: int) -> And:
     return binary_encode(
         to_binary_string(agent, total_possible_actions),
@@ -158,18 +213,7 @@ def encode_action(action: int, agent: int, time: int, total_possible_actions: in
     )
 
 
-# Must send in state observation (which resources - in acc_list - are held by which agents)
-# By Definition 14 in Paper
-def encode_state_observation(acc_list: list, agent: int, total_num_agents: int, time: int) -> And:
-    to_conjunct = []
-    for resource in acc_list:
-        to_conjunct.append(
-            encode_resource_state(resource, agent, time, total_num_agents)
-        )
-    return And(to_conjunct)
-
-
-# By Definition 15 in Paper
+# By Definition 21 in Paper
 def encode_strategic_decision(action: int, agent: Agent, time: int) -> And:
     return binary_encode(
         to_binary_string(action, len(agent.acc)),
@@ -177,27 +221,14 @@ def encode_strategic_decision(action: int, agent: Agent, time: int) -> And:
     )
 
 
-# By definition 16 in Paper
-def encode_uniform_action(action: int, agent: int, total_num_agents: int, total_possible_actions: int,
-                          time: int) -> And:
-    return And(
-        encode_action(action, agent, time, total_possible_actions),
-        h_encode_uniformity_clause(agent, total_num_agents, action, total_possible_actions, time)
-    )
-
-
-# By definition 16 in Paper (helper function)
-def h_encode_uniformity_clause(agent, total_num_agents, action, total_possible_actions, time):
-    pass
-
-# By definition 18
-
-# By definition 19
-
 # Evolution
 
 # Initial State
 
 
-target_mra = read_in_mra("input.yml")
-print(explicate_state_observation_set(target_mra.agt[1], target_mra))
+# problem = read_in_mra("input.yml")
+# for itm in explicate_state_observation_set(problem.agt[1], problem):
+#     print(itm)
+
+print(h_all_satisfactory_resource_combinations([1, 2, 3, 4], 3))
+
