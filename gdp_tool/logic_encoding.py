@@ -20,12 +20,19 @@ class Agent:
 class MRA:
     agt: list[Agent]
     res: list[int]
+    coalition: list[int]
 
     def num_agents(self):
         return len(self.agt)
 
     def num_resources(self):
         return len(self.res)
+
+
+@dataclass
+class Problem:
+    mra: MRA
+    k: int
 
 
 @dataclass
@@ -55,22 +62,37 @@ class State:
         return State(self.a, self.r)
 
 
+# also conjunct with def 14 function
+def encode_m_k(m: MRA, k: int) -> And:
+    to_conjunct = [encode_initial_state(len(m.res), len(m.agt))]
+    for t in range(0, k):
+        to_conjunct.append((encode_evolution(m, t)))
+    return And(to_conjunct)
+
+
 def read_in_mra(path: str):
     yml_data = load(open(path, "r"), Loader=SafeLoader)
     agents = []
-    for item in yml_data:
+    for a_name in yml_data[agents]:
         agents.append(
             Agent(
-                id=int(item[1:]),
-                acc=list(map(lambda r: int(r[1:]), yml_data[item]["access"])),
-                d=yml_data[item]["demand"]
+                id=int(a_name[1:]),
+                acc=list(map(lambda r: int(r[1:]), yml_data[a_name]["access"])),
+                d=yml_data[a_name]["demand"]
             )
         )
     resources: set = set()
     for a in agents:
         for resource in a.acc:
             resources.add(resource)
-    return MRA(agents, list(resources))
+    return Problem(
+        mra=MRA(
+            agt=agents,
+            res=list(resources),
+            coalition=list(map(lambda x: int(x[1:]), yml_data["coalition"]))
+        ),
+        k=int(yml_data["k"])
+    )
 
 
 def to_binary_string(number: int, x: int) -> str:
@@ -161,15 +183,16 @@ def encode_initial_state(num_resources: int, num_agents: int) -> And:
 
 
 # By Definition 13 in Paper
-def encode_evolution(m: MRA, time: int) -> And:
+def encode_evolution(m: MRA, t: int) -> And:
     to_conjunct = []
     for r in m.res:
-        to_conjunct.append(encode_r_evolution(r, m, time))
+        to_conjunct.append((encode_r_evolution(r, m, t)))
     return And(to_conjunct)
 
 
 # By Definition 13 in Paper
-def encode_r_evolution(r: int, m: MRA, time: int) -> Or:
+def encode_r_evolution(r: int, m: MRA, t: int) -> Or:
+
     return Or()
 
 
@@ -180,7 +203,7 @@ def encode_goal_reachability_formula(agents: list[Agent], total_num_agents: int,
         to_or = []
         for t in range(0, k):
             to_or.append(encode_goal(a, t, total_num_agents))
-        to_conjunct.append(Or(to_or))
+        to_conjunct.append((Or(to_or)))
     return And(to_conjunct)
 
 
@@ -207,7 +230,7 @@ def encode_goal(agent: Agent, time: int, total_num_agents: int) -> Or:
     to_or = []
     for combination in h_all_satisfactory_resource_combinations(agent.acc, agent.d):
         for r in combination:
-            to_or.append(encode_resource_state(r, agent.id, time, total_num_agents))
+            to_or.append((encode_resource_state(r, agent.id, time, total_num_agents)))
     return Or(to_or)
 
 
@@ -233,7 +256,7 @@ def h_rec_all_satisfactory_resource_combinations(acc: list[int], c: list[int], s
 def encode_action(action: str, agent: Agent, time: int) -> And:
     return binary_encode(
         to_binary_string(action_number(action), len(agent.acc)),
-        f"act_{action}a{agent}t{time}"
+        f"act({action})a{agent}t{time}"
     )
 
 
@@ -241,7 +264,7 @@ def encode_action(action: str, agent: Agent, time: int) -> And:
 def encode_strategic_decision(action: str, agent: Agent, time: int) -> And:
     return binary_encode(
         to_binary_string(action_number(action), len(agent.acc)),
-        f"s_act_{action}a{agent.id}t{time}"
+        f"s_act({action})a{agent.id}t{time}"
     )
 
 
@@ -254,6 +277,6 @@ def encode_strategic_decision(action: str, agent: Agent, time: int) -> And:
 # for itm in explicate_state_observation_set(problem.agt[1], problem):
 #     print(itm)
 
-# print(h_all_satisfactory_resource_combinations([1, 2, 3, 4, 5], 3))
+# print(h_all_satisfactory_resource_combinations([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11], 6))
 
-print(action_number("relall"))
+print(action_number("rel1"))
