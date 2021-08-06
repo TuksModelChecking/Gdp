@@ -80,11 +80,9 @@ def read_in_mra(path: str):
             acc=list(map(lambda r: int(r[1:]), yml_data[a_name]["access"])),
             d=yml_data[a_name]["demand"]
         )
-        agents.append(
-            agent
-        )
         for resource in agent.acc:
             resources.add(resource)
+        agents.append(agent)
     return Problem(
         mra=MRA(
             agt=agents,
