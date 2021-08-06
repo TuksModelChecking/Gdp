@@ -91,6 +91,19 @@ def binary_encode(binary_string: str, name_prefix: str):
     return And(to_conjunct)
 
 
+def action_number(action: str):
+    if action == "idle":
+        return 0
+    elif action == "release-all" or action == "relall":
+        return 1
+    elif "req" == action[:3]:
+        x = int(action[3:])
+        return x * 2
+    elif "rel" == action[:3]:
+        x = int(action[3:])
+        return x * 2 + 1
+
+
 # By Definition 4 in Paper
 def explicate_state_observation_set(a_i: Agent, mra: MRA) -> list[list[State]]:
     un_collapsed_observation_set = []
@@ -217,18 +230,18 @@ def h_rec_all_satisfactory_resource_combinations(acc: list[int], c: list[int], s
 
 
 # By Definition 20 in Paper
-def encode_action(action: int, agent: int, time: int, total_possible_actions: int) -> And:
+def encode_action(action: str, agent: Agent, time: int) -> And:
     return binary_encode(
-        to_binary_string(agent, total_possible_actions),
-        f"act{action}a{agent}t{time}"
+        to_binary_string(action_number(action), len(agent.acc)),
+        f"act_{action}a{agent}t{time}"
     )
 
 
 # By Definition 21 in Paper
-def encode_strategic_decision(action: int, agent: Agent, time: int) -> And:
+def encode_strategic_decision(action: str, agent: Agent, time: int) -> And:
     return binary_encode(
-        to_binary_string(action, len(agent.acc)),
-        f"s_act{action}a{agent.id}t{time}"
+        to_binary_string(action_number(action), len(agent.acc)),
+        f"s_act_{action}a{agent.id}t{time}"
     )
 
 
@@ -241,5 +254,6 @@ def encode_strategic_decision(action: int, agent: Agent, time: int) -> And:
 # for itm in explicate_state_observation_set(problem.agt[1], problem):
 #     print(itm)
 
-print(h_all_satisfactory_resource_combinations([1, 2, 3, 4, 5], 3))
+# print(h_all_satisfactory_resource_combinations([1, 2, 3, 4, 5], 3))
 
+print(action_number("relall"))
