@@ -293,31 +293,38 @@ class ISPLGenerator:
         self.untab_write("end Formulae\n")
 
 
-def generate_access(num_resources, demand):
+def generate_access(num_resources, access_size):
     if num_resources == 0:
         return []
     access = set()
-    if demand > num_resources:
-        access_size = num_resources
-    else:
-        access_size = max(randrange(demand, num_resources + 1), demand)
     while len(access) < access_size:
         access.add(f"r{randrange(1, num_resources + 1)}")
     return list(access)
 
 
-def generate_template_file(file, bounds):
+def generate_template_file(file, k, bounds):
     num_agents = randrange(bounds[0][0], bounds[0][1])
-    gdp = {'fairness': False, 'formulae': ['<all> live'], 'observable': '<none>'}
     num_resources = 1
     if len(bounds) > 1:
         num_resources = randrange(bounds[1][0], bounds[1][1])
-    demand_range = (0, num_resources)
+    demand_range = access_range = (0, num_resources)
     if len(bounds) > 2:
         demand_range = bounds[2]
+    if len(bounds) > 3:
+        access_range = bounds[3]
+
+    gdp = {
+        "k": int(k),
+        "agents": [f"a{i}" for i in range(1, num_agents + 1)],
+        "resources": [f"r{i}" for i in range(1, num_resources + 1)],
+        "coalition": [f"a{i}" for i in range(1, num_agents + 1)]
+    }
+
     for i in range(1, num_agents + 1):
         demand = randrange(demand_range[0], demand_range[1])
-        gdp[f'a{i}'] = {'access': generate_access(num_resources, demand), 'demand': demand}
+        candidate_access = randrange(access_range[0], access_range[1])
+        access = candidate_access if candidate_access > demand else demand
+        gdp[f'a{i}'] = {'access': generate_access(num_resources, access), 'demand': demand}
     with open(f"{file}", 'w') as f:
         dump(gdp, f)
     with open(f"{file}", "a") as f:
@@ -331,7 +338,7 @@ def validate_and_extract(bnds):
         for b in bnds:
             b = b.split("..")
             if len(b) > 1:
-                bounds.append((int(b[0]), int(b[1])))
+                bounds.append((int(b[0]), int(b[1]) + 1))
             else:
                 bounds.append((int(b[0]), int(b[0]) + 1))
     except ValueError:
@@ -365,9 +372,9 @@ def validate_and_extract(bnds):
     help="Make demand vars observable. Default: -no"
 )
 @click.option(
-    '--generate', '-g', nargs=2, type=str,
-    help="Generate a GDP model based on the specified num_agents,num_resources,agent_demand."
-         " Each paramater can be an int or an int range. EXAMPLE: -g gdp.txt 3,2..4,1..4"
+    '--generate', '-g', nargs=3, type=str,
+    help="Generate a GDP model based on the specified num_agents,num_resources,agent_demand,agent_access."
+         " Each paramater can be an int or an int range. EXAMPLE: -g gdp.txt 20 3,2..4,1..4,2..4"
          "\nNote, you may run with only num_agents to create a template file. EXAMPLE: -g gdp.txt 3"
 )
 # === main ==========================================================
@@ -380,15 +387,15 @@ def main(fair, obs, generate, ispl_file, gdp_file):
             $ python3 gifg.py -g model_name.txt 3
             (Generates a template file with 3 agents. User must manually define rest of GDP in model_name.txt)\n
             or\n
-            $ python3 gifg.py -g model_name.txt 3..5,7,2..7
+            $ python3 gifg.py -g model_name.txt 3..5,7,2..7,2..7
             (Generate GDP model with 3 to 5 agents, 7 resources, and (for each agent) a demand within the range [2,7]. User must open file to set formulae to check)\n
         then\n
         ISPL generation:\n
             $ python3 gifg.py -gdp model_name.txt -o -f -ispl m13.ispl
             (Parse model; turn on observability and fairness; output as m13.ispl)\n
     """
-    if generate is not None and len(generate) == 2:
-        generate_template_file(generate[0], validate_and_extract(generate[1]))
+    if generate is not None and len(generate) == 3:
+        generate_template_file(generate[0], generate[1], validate_and_extract(generate[2]))
     elif gdp_file is not None:
         ispl_generator = ISPLGenerator(
             load(open(gdp_file, "r"), Loader=SafeLoader),
